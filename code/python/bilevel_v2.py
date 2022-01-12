@@ -49,7 +49,7 @@ def process(G, comp, adj, vert, color):
             comp = process(G, comp, adj, v, color)
     return comp
 
-def Bilevel_v2(G: Graph.Graph, S: int, L: int, R: int, ul: list(), ui: list, h: list(), q: list()):
+def getModel(G: Graph.Graph, S: int, L: int, R: int, ul: list(), ui: list, h: list(), q: list()):
     model = Model("bl2")
     K = G.n - S #number of customers (assume stores are the last s locations, 0 is depot)
     x = {} #leader's routing
@@ -58,8 +58,8 @@ def Bilevel_v2(G: Graph.Graph, S: int, L: int, R: int, ul: list(), ui: list, h: 
     v = {} #leader's product-location/vehicle mapping
     w = {} #linerization
     a = {} #follower dual
-    M1 = 100
-    M2 = 100
+    M1 = 1000000
+    M2 = 1000
 
     for i in range(G.n):
         for r in range(R):
@@ -74,17 +74,21 @@ def Bilevel_v2(G: Graph.Graph, S: int, L: int, R: int, ul: list(), ui: list, h: 
 
     for k in range(1, K):
         for l in range(L):
-            y[k, k, l] = model.addVar(vtype=GRB.CONTINUOUS, name='y_%g_%g_%g' % (k, k, l))
-            y[k, 0, l] = model.addVar(vtype=GRB.CONTINUOUS, name='y_%g_%g_%g' % (k, 0, l))
-            z[k, k, l] = model.addVar(vtype=GRB.CONTINUOUS, name='z_%g_%g_%g' % (k, k, l))
+            y[k, k, l] = model.addVar(vtype=GRB.BINARY, name='y_%g_%g_%g' % (k, k, l))
+            y[k, 0, l] = model.addVar(vtype=GRB.BINARY, name='y_%g_%g_%g' % (k, 0, l))
+            z[k, k, l] = model.addVar(vtype=GRB.CONTINUOUS, lb=30, name='z_%g_%g_%g' % (k, k, l))
             w[k, k, l] = model.addVar(obj=-1, vtype=GRB.CONTINUOUS, name='w_%g_%g_%g' % (k, k, l))
             a[k, l] = model.addVar(vtype=GRB.CONTINUOUS, name='a_%g_%g' % (k, l))
             for s in range(S):
-                y[k, s + K, l] = model.addVar(vtype=GRB.CONTINUOUS, name='y_%g_%g_%g' % (k, s + K, l))
-                z[k, s + K, l] = model.addVar(vtype=GRB.CONTINUOUS, name='z_%g_%g_%g' % (k, s + K, l))
+                y[k, s + K, l] = model.addVar(vtype=GRB.BINARY, name='y_%g_%g_%g' % (k, s + K, l))
+                z[k, s + K, l] = model.addVar(vtype=GRB.CONTINUOUS, lb=30, name='z_%g_%g_%g' % (k, s + K, l))
                 w[k, s + K, l] = model.addVar(obj=-1, vtype=GRB.CONTINUOUS, name='w_%g_%g_%g' % (k, s + K, l))
 
     model.update()
+
+    '''for r in range(R):
+        x[0, 7, r].obj = 1
+        x[7, 0, r].obj = 1'''
 
     #balance
     for r in range(R):
@@ -102,9 +106,9 @@ def Bilevel_v2(G: Graph.Graph, S: int, L: int, R: int, ul: list(), ui: list, h: 
     model.addConstrs(quicksum(h[l]*quicksum(v[i, l, r] for i in range(1, G.n)) for l in range(L)) <= q[r] for r in range(R))
 
     #duality
-    model.addConstrs(a[k, l] == y[k, 0, l] + ul[k, l]*y[k, k, l] - w[k, k, l] + quicksum((ul[k, l] - ui[k, s])*y[k, s + K, l] - w[k, s + K, l] for s in range(S)) for l in range(L) for k in range(1, K))
+    model.addConstrs(a[k, l] == ul[k, l]*y[k, k, l] - w[k, k, l] + quicksum((ul[k, l] - ui[k, s])*y[k, s + K, l] - w[k, s + K, l] for s in range(S)) for l in range(L) for k in range(1, K))
     model.addConstrs(y[k, 0, l] + y[k, k, l] + quicksum(y[k, s + K, l] for s in range(S)) == 1 for l in range(L) for k in range(1, K))
-    model.addConstrs(a[k, l] >= 1 for l in range(L) for k in range(1, K)) #utility of non-buying
+    model.addConstrs(a[k, l] >= 0 for l in range(L) for k in range(1, K)) #utility of non-buying
     model.addConstrs(a[k, l] >= ul[k, l] - z[k, k, l] for l in range(L) for k in range(1, K))
     model.addConstrs(a[k, l] >= ul[k, l] - ui[k, s] - z[k, s + K, l] for s in range(S) for l in range(L) for k in range(1, K))
 
@@ -116,6 +120,9 @@ def Bilevel_v2(G: Graph.Graph, S: int, L: int, R: int, ul: list(), ui: list, h: 
     model.addConstrs(w[k, k, l] >= z[k, k, l] - M2*(1 - y[k, k, l]) for l in range(L) for k in range(1, K))
     model.addConstrs(w[k, s + K, l] >= z[k, s + K, l] - M2*(1 - y[k, s + K, l]) for s in range(S) for l in range(L) for k in range(1, K))
 
+    '''for k in range(1, K):
+        for l in range(L):
+            model.addConstr(y[k, 0, l] == 1)'''
     #model.write("D:\\Study\\Ph.D\\Projects\\Bilevel Optimization\\code\\python\\models\\test1.lp")
 
     model._x = x
@@ -123,21 +130,23 @@ def Bilevel_v2(G: Graph.Graph, S: int, L: int, R: int, ul: list(), ui: list, h: 
     model._R = R
     model.Params.lazyConstraints = 1
 
-    model.optimize(callback_mult)
+    #model.optimize(callback_mult)
 
-    for i, j, r in x.keys():
+    '''for i, j, r in x.keys():
         if x[i, j, r].x > 0.5:
             print("%d, %d, %d" % (i, j, r))
 
     print("//////////////////////////")
     for k, i, l in y.keys():
         if i > 0:
-            print("%d, %d, %d: %d %d %d"  % (k, i, l, np.round(z[k, i, l].x), np.round(w[k, i, l].x), y[k, i, l].x))
+            print("%d, %d, %d: %d %d %d"  % (k, i, l, np.round(z[k, i, l].x), np.round(w[k, i, l].x), np.round(y[k, i, l].x)))
         else:
             print("%d, %d, %d: %d %d %d" % (k, i, l, -1, -1, y[k, i, l].x))
         #print("---------------------")'''
 
-G = Graph.Graph()
+    return model, y, z, K, L
+
+'''G = Graph.Graph()
 G.read("..\..\data\TSP_instance_n_10_s_1.dat")
 S = 3
 R = 2
@@ -164,4 +173,4 @@ for line in f:
     for l in range(L):
         ul[k, l] = int(utls[l])
 f.close()
-mtz = Bilevel_v2(G, S, L, R, ul, ui, h, q)
+mtz = Bilevel_v2(G, S, L, R, ul, ui, h, q)'''
