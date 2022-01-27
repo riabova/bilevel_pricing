@@ -50,17 +50,16 @@ def process(G, comp, adj, vert, color):
     return comp
 
 def getModel(G: Graph.Graph, S: int, L: int, R: int, ul: list(), ui: list, h: list(), q: list()):
-    model = Model("bl3")
+    model = Model("bl4")
     K = G.n - S #number of customers (assume stores are the last s locations, 0 is depot)
     x = {} #leader's routing
-    y  ={} #followe's decision (continuous for duality)
+    y  ={} #follower's decision (continuous for duality)
     z = {} #leader's discount
     v = {} #leader's product-location/vehicle mapping
     w = {} #linerization
     a = {} #follower's dual 1
-    b = {} #lollower's dual 2
+    b = {} #follower's dual 2
     p = {} #follower visits i
-    M1 = 1000
     M2 = 1000
     #K = 2
 
@@ -70,10 +69,6 @@ def getModel(G: Graph.Graph, S: int, L: int, R: int, ul: list(), ui: list, h: li
                 x[i, j, r] = model.addVar(obj=G.dist[i, j], vtype=GRB.BINARY, name="x_%g_%g_%g" % (i, j, r))
             for j in range(i+1, G.n):
                 x[i, j, r] = model.addVar(obj=G.dist[j, i], vtype=GRB.BINARY, name="x_%g_%g_%g" % (i, j, r))
-    for i in range(1, G.n):
-        for r in range(R):
-            for l in range(L):
-                v[i, l, r] = model.addVar(vtype=GRB.BINARY, name="v_%g_%g_%g" % (i, l, r))
 
     for k in range(1, K):
         for l in range(L):
@@ -82,11 +77,15 @@ def getModel(G: Graph.Graph, S: int, L: int, R: int, ul: list(), ui: list, h: li
             z[k, k, l] = model.addVar(vtype=GRB.CONTINUOUS, lb=30, name='z_%g_%g_%g' % (k, k, l))
             w[k, k, l] = model.addVar(obj=-1, vtype=GRB.CONTINUOUS, name='w_%g_%g_%g' % (k, k, l))
             a[k, l] = model.addVar(vtype=GRB.CONTINUOUS, name='a_%g_%g' % (k, l))
+            for r in range(R):
+                v[k, l, r, k] = model.addVar(vtype=GRB.BINARY, name="v_%g_%g_%g_%g" % (k, l, r, k))
             for s in range(S):
                 y[k, s + K, l] = model.addVar(vtype=GRB.BINARY, name='y_%g_%g_%g' % (k, s + K, l))
                 z[k, s + K, l] = model.addVar(vtype=GRB.CONTINUOUS, lb=30, name='z_%g_%g_%g' % (k, s + K, l))
                 w[k, s + K, l] = model.addVar(obj=-1, vtype=GRB.CONTINUOUS, name='w_%g_%g_%g' % (k, s + K, l))
                 b[k, s + K, l] = model.addVar(vtype=GRB.CONTINUOUS, name='b_%g_%g_%g' % (k, s + K, l))
+                for r in range(R):
+                    v[s + K, l, r, k] = model.addVar(vtype=GRB.BINARY, name="v_%g_%g_%g_%g" % (s + K, l, r, k))
         for s in range(S):
             p[k, s + K] = model.addVar(vtype=GRB.CONTINUOUS, name='p_%g_%g' % (k, s + K))
 
@@ -95,21 +94,27 @@ def getModel(G: Graph.Graph, S: int, L: int, R: int, ul: list(), ui: list, h: li
     '''for r in range(R):
         x[0, 7, r].obj = 1
         x[7, 0, r].obj = 1'''
+    
+    model.addConstr(y[1,1,0] == 1)
+    model.addConstr(v[1,0,0,1] == 1)
+    model.addConstr(x[1,0,0] == 1)
 
     #balance
+    model.addConstrs(quicksum(x[k, j, r] for j in range(k)) + quicksum(x[k, j, r] for j in range(k + 1, G.n)) == v[k, l, r, k] for l in range(L) for r in range(R) for k in range(1, K))
+    model.addConstrs(quicksum(x[s + K, j, r] for j in range(s + K)) + quicksum(x[s + K, j, r] for j in range(s + K + 1, G.n)) == v[s + K, l, r, k] for s in range(S) for l in range(L) for r in range(R) for k in range(1, K))
     for r in range(R):
         model.addConstr(quicksum(x[0, j, r] for j in range(1, G.n)) <= 1)
         model.addConstr(quicksum(x[j, 0, r] for j in range(1, G.n)) <= 1)
         model.addConstr(quicksum(x[0, j, r] for j in range(1, G.n)) - quicksum(x[j, 0, r] for j in range(1, G.n)) == 0)
         for i in range(1, G.n):
-            model.addConstr(quicksum(x[i, j, r] for j in range(i)) + quicksum(x[i, j, r] for j in range(i + 1, G.n)) >= quicksum(v[i, l, r] for l in range(L))/M1)
+            #model.addConstrs(quicksum(x[i, j, r] for j in range(i)) + quicksum(x[i, j, r] for j in range(i + 1, G.n)) == v[i, l, r, k] for l in range(L) for k in range(1, K))
             model.addConstr(quicksum(x[i, j, r] for j in range(i)) + quicksum(x[i, j, r] for j in range(i + 1, G.n)) 
             - (quicksum(x[j, i, r] for j in range(i)) + quicksum(x[j, i, r] for j in range(i + 1, G.n))) == 0)
 
     #capacity
-    model.addConstrs(quicksum(v[k, l, r] for r in range(R)) == y[k, k, l] for k in range(1, K) for l in range(L))
-    model.addConstrs(quicksum(v[s + K, l, r] for r in range(R)) == quicksum(y[k, s + K, l] for k in range(1, K))  for s in range(S) for l in range(L))
-    model.addConstrs(quicksum(h[l]*quicksum(v[i, l, r] for i in range(1, G.n)) for l in range(L)) <= q[r] for r in range(R))
+    model.addConstrs(quicksum(v[k, l, r, k] for r in range(R)) == y[k, k, l] for k in range(1, K) for l in range(L))
+    model.addConstrs(quicksum(v[s + K, l, r, k] for r in range(R)) == y[k, s + K, l] for s in range(S) for l in range(L) for k in range(1, K))
+    model.addConstrs(quicksum(h[l]*quicksum(v[k, l, r, k] + quicksum(v[s + K, l, r, k] for s in range(S)) for k in range(1, K)) for l in range(L)) <= q[r] for r in range(R))
 
     #duality
     model.addConstrs(quicksum(a[k, l] for l in range(L)) == quicksum(ul[k, l]*y[k, k, l] - w[k, k, l] + quicksum(ul[k, l]*y[k, s + K, l] - w[k, s + K, l] for s in range(S)) for l in range(L)) - quicksum(ui[k, s]*p[k, s + K] for s in range(S)) for k in range(1, K))
@@ -131,7 +136,7 @@ def getModel(G: Graph.Graph, S: int, L: int, R: int, ul: list(), ui: list, h: li
     '''for k in range(1, K):
         for l in range(L):
             model.addConstr(y[k, 0, l] == 1)'''
-    #model.write("D:\\Study\\Ph.D\\Projects\\Bilevel Optimization\\code\\python\\models\\test1cust.lp")
+    model.write("D:\\Study\\Ph.D\\Projects\\Bilevel Optimization\\code\\python\\models\\test_v4.lp")
 
     model._x = x
     model._G = G

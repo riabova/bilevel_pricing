@@ -1,9 +1,10 @@
-import gurobipy as grb
 import queue
 import math
-import numpy as np
+import time
 from dataclasses import dataclass
 import bilevel_v2
+import bilevel_v3
+import bilevel_v4a
 
 class BNB:
 
@@ -55,7 +56,9 @@ class BNB:
         self.ul = ul
         self.distThrshd = distThrshd
         self.model.Params.OutputFlag = 0
-        self.model.optimize(bilevel_v2.callback_mult)
+        start = time.time()
+        self.model.optimize(bilevel_v3.callback_mult)
+        print("Solved in %g" % (time.time() - start))
         root = self.Node(self.numNodes, -1, self.model.objVal, -1)
         root.parent = root
         self.nodeQueue.put(root)
@@ -111,7 +114,7 @@ class BNB:
             current = current.parent
 
         if(node.name != 0):
-            self.model.optimize(bilevel_v2.callback_mult)
+            self.model.optimize(bilevel_v3.callback_mult)
             node.obj = self.model.objVal
         if (self.model.status != 3):
             if (self.bestNode == -1 or math.floor(node.obj) > self.bestNode.obj):
@@ -150,16 +153,16 @@ class BNB:
         print("Leader's objective: %g" % -self.model.objVal)
         print("Customers decisions:")
         for k in range(1, self.K):
-            print("Obj: %g   part1: %g   part2: %g" % (sum(self.ul[k, l]*self.y[k, k, l].x - self.w[k, k, l].x 
+            print("Customer %d - Obj: %g   part1: %g   part2: %g" % (k, sum(self.ul[k, l]*self.y[k, k, l].x - self.w[k, k, l].x 
             + sum(self.ul[k, l]*self.y[k, s + self.K, l].x - self.w[k, s + self.K, l].x for s in range(self.S)) for l in range(self.L)) 
             - sum(self.ui[k, s]*self.p[k, s + self.K].x for s in range(self.S)), sum(self.ul[k, l]*self.y[k, k, l].x - self.w[k, k, l].x 
             + sum(self.ul[k, l]*self.y[k, s + self.K, l].x - self.w[k, s + self.K, l].x for s in range(self.S)) for l in range(self.L)), 
             sum(self.ui[k, s]*self.p[k, s + self.K].x for s in range(self.S))))
             for l in range(self.L):
-                print("%d, %d, %d: %g %g"  % (k, k, l, self.y[k, k, l].x, self.ul[k, l] - self.z[k, k, l].x))
-                print("%d, %d, %d: %g -"  % (k, 0, l, self.y[k, 0, l].x))
+                print("%d, %d: %g %g"  % (k, l, self.y[k, k, l].x, self.ul[k, l] - self.z[k, k, l].x))
+                print("%d, %d: %g -"  % (0, l, self.y[k, 0, l].x))
                 for s in range(self.S):
-                    print("%d, %d, %d: %g %g"  % (k, s + self.K, l, self.y[k, s + self.K, l].x,  self.ul[k, l] - self.z[k, s + self.K, l].x))
+                    print("%d, %d: %g %g"  % (s + self.K, l, self.y[k, s + self.K, l].x,  self.ul[k, l] - self.z[k, s + self.K, l].x))
 
         print("Routing:")
         for i, j, r in self.x.keys():
