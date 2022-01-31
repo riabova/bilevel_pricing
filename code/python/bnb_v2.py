@@ -58,6 +58,7 @@ class BNB:
         start = time.time()
         self.model.optimize(bilevel_v4.callback_mult)
         print("Solved in %g" % (time.time() - start))
+        #self.model.Params.OutputFlag = 0
         root = self.Node(self.numNodes, -1, self.model.objVal, -1)
         root.parent = root
         self.nodeQueue.put(root)

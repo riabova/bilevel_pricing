@@ -20,7 +20,6 @@ class Graph:
         f.close()
 
     def MST(self, start=0):
-        tree = []
         q = PriorityQueue()
         q.put(([0, start]))
         cost = [0]

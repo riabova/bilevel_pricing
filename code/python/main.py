@@ -1,6 +1,6 @@
 import bnb_v2
 import Graph
-import bilevel_v4
+import bilevel_v5
 from dataclasses import dataclass
 
 @dataclass
@@ -42,8 +42,8 @@ for line in f:
             lk.append(len(items) - 1)
     Lk.append(lk)
 f.close()
-modelInf = bilevel_v4.getModel(G, items, Lk, inconvs, S, R, q)
+modelInf = bilevel_v5.getModel(G, items, Lk, inconvs, S, R, q)
 dThrshd = 2
 bnbTree = bnb_v2.BNB(G, modelInf[0], modelInf[1], modelInf[2], modelInf[3], modelInf[4], modelInf[5], items, Lk, inconvs, L, dThrshd)
-bnbTree.solve()
+#bnbTree.solve()
 bnbTree.printSol()

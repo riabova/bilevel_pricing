@@ -50,9 +50,10 @@ def process(G, comp, adj, vert, color):
     return comp
 
 def getModel(G: Graph.Graph, items: list(), Lk: list(), ui, S: int, R: int, q: list()):
-    model = Model("bl4")
+    model = Model("bl5")
     K = G.n - S #number of customers (assume stores are the last s locations, 0 is depot)
     x = {} #leader's routing
+    C = {} #routs oredring by cost
     y  ={} #follower's decision (continuous for duality)
     z = {} #leader's discount
     v = {} #leader's product-location/vehicle mapping
@@ -65,9 +66,11 @@ def getModel(G: Graph.Graph, items: list(), Lk: list(), ui, S: int, R: int, q: l
     for i in range(G.n):
         for r in range(R):
             for j in range(i):
-                x[i, j, r] = model.addVar(obj=G.dist[i, j], vtype=GRB.BINARY, name="x_%g_%g_%g" % (i, j, r))
+                x[i, j, r] = model.addVar(vtype=GRB.BINARY, name="x_%g_%g_%g" % (i, j, r))
             for j in range(i+1, G.n):
-                x[i, j, r] = model.addVar(obj=G.dist[j, i], vtype=GRB.BINARY, name="x_%g_%g_%g" % (i, j, r))
+                x[i, j, r] = model.addVar(vtype=GRB.BINARY, name="x_%g_%g_%g" % (i, j, r))
+    for r in range(R):
+        C[r] = model.addVar(obj=1, vtype=GRB.CONTINUOUS, name="C_%g" % r)
 
     for l in range(len(items)):
         y[items[l].k, l] = model.addVar(vtype=GRB.BINARY, name='y_%g_%g' % (items[l].k, l))
@@ -93,6 +96,8 @@ def getModel(G: Graph.Graph, items: list(), Lk: list(), ui, S: int, R: int, q: l
     #balance
     model.addConstrs(quicksum(x[items[l].k, j, r] for j in range(items[l].k)) + quicksum(x[items[l].k, j, r] for j in range(items[l].k + 1, G.n)) >= v[items[l].k, l, r] for l in range(len(items)) for r in range(R))
     model.addConstrs(quicksum(x[s + K, j, r] for j in range(s + K)) + quicksum(x[s + K, j, r] for j in range(s + K + 1, G.n)) >= v[s + K, l, r] for s in range(S) for l in range(len(items)) for r in range(R))
+    model.addConstrs(C[r] == quicksum(G.dist[i, j]*x[i, j, r] + G.dist[i, j]*x[j, i, r] for i in range(G.n) for j in range(i)) for r in range(R))
+    model.addConstrs(C[r - 1] <= C[r] for r in range(1, R))
     for r in range(R):
         model.addConstr(quicksum(x[0, j, r] for j in range(1, G.n)) <= 1)
         model.addConstr(quicksum(x[j, 0, r] for j in range(1, G.n)) <= 1)
