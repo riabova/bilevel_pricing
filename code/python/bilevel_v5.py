@@ -1,16 +1,21 @@
 from gurobipy import *
-from numpy.core import numeric
 import Graph
-import random
-import numpy as np
 from itertools import combinations
 import matplotlib.pyplot as plt
 
 def callback_mult(model, where):
     if where == GRB.Callback.MIPSOL:
         G = model._G
+        g_sol = model.cbGetSolution(model._g)
+        v_sol = model.cbGetSolution(model._v)
+        y_sol = model.cbGetSolution(model._y)
         x_sol = model.cbGetSolution(model._x)
         for k in range(model._R):
+            '''print("Routing:")
+            for i in range(G.n):
+                for j in range(i):
+                    if x_sol[i, j, k] > 0.5:
+                        print("%d, %d, %d: %d" % (i, j, k, x_sol[i, j, k]))'''
             callback(model, G, k, x_sol)
 
 def callback(model, G, k, x_sol):
@@ -22,14 +27,14 @@ def callback(model, G, k, x_sol):
             if x_sol[i, j, k] > 0.5:
                 adj[i].append(j)
                 adj[j].append(i)
-        for j in range(i+1, G.n):
-            if x_sol[i, j, k] > 0.5:
-                adj[i].append(j)
-                adj[j].append(i)
     cc = DFS(G, adj)
     if len(cc) > 1:
         for comp in cc:
-            model.cbLazy(quicksum(model._x[i, j, k] + model._x[j, i, k] for i, j in combinations(comp, 2)) <= len(comp) - 1)
+            #print(comp)
+            if len(comp) > 1:
+                #gh = list(combinations(comp, 2))
+                #print(quicksum(model._x[max(a), min(a), k] for a in combinations(comp, 2)) <= len(comp) - 1)
+                model.cbLazy(quicksum(model._x[max(a), min(a), k] for a in combinations(comp, 2)) <= len(comp) - 1)
 
 
 def DFS(G, adj):
@@ -61,16 +66,18 @@ def getModel(G: Graph.Graph, items: list(), Lk: list(), ui, S: int, R: int, q: l
     a = {} #follower's dual 1
     b = {} #follower's dual 2
     p = {} #follower visits i
+    g = {}
     M2 = 1000
 
-    for i in range(G.n):
+    for i in range(1, G.n):
         for r in range(R):
-            for j in range(i):
-                x[i, j, r] = model.addVar(vtype=GRB.BINARY, name="x_%g_%g_%g" % (i, j, r))
-            for j in range(i+1, G.n):
-                x[i, j, r] = model.addVar(vtype=GRB.BINARY, name="x_%g_%g_%g" % (i, j, r))
+            x[i, 0, r] = model.addVar(obj=G.dist[i, 0], vtype=GRB.INTEGER, ub=2, name="x_%g_%g_%g" % (i, 0, r))
+            for j in range(1, i):
+                x[i, j, r] = model.addVar(obj=G.dist[i, j], vtype=GRB.BINARY, name="x_%g_%g_%g" % (i, j, r))
     for r in range(R):
         C[r] = model.addVar(obj=1, vtype=GRB.CONTINUOUS, name="C_%g" % r)
+        for i in range(G.n):
+            g[r, i] = model.addVar(vtype = GRB.BINARY, name="g_%g_%g" % (r, i))
 
     for l in range(len(items)):
         y[items[l].k, l] = model.addVar(vtype=GRB.BINARY, name='y_%g_%g' % (items[l].k, l))
@@ -93,18 +100,17 @@ def getModel(G: Graph.Graph, items: list(), Lk: list(), ui, S: int, R: int, q: l
 
     model.update()
 
+    #model.addConstr(y[1, 0] == 1)
+    #model.addConstr(y[8, 1] == 1)
+
     #balance
-    model.addConstrs(quicksum(x[items[l].k, j, r] for j in range(items[l].k)) + quicksum(x[items[l].k, j, r] for j in range(items[l].k + 1, G.n)) >= v[items[l].k, l, r] for l in range(len(items)) for r in range(R))
-    model.addConstrs(quicksum(x[s + K, j, r] for j in range(s + K)) + quicksum(x[s + K, j, r] for j in range(s + K + 1, G.n)) >= v[s + K, l, r] for s in range(S) for l in range(len(items)) for r in range(R))
-    model.addConstrs(C[r] == quicksum(G.dist[i, j]*x[i, j, r] + G.dist[i, j]*x[j, i, r] for i in range(G.n) for j in range(i)) for r in range(R))
-    model.addConstrs(C[r - 1] <= C[r] for r in range(1, R))
-    for r in range(R):
-        model.addConstr(quicksum(x[0, j, r] for j in range(1, G.n)) <= 1)
-        model.addConstr(quicksum(x[j, 0, r] for j in range(1, G.n)) <= 1)
-        model.addConstr(quicksum(x[0, j, r] for j in range(1, G.n)) - quicksum(x[j, 0, r] for j in range(1, G.n)) == 0)
-        for i in range(1, G.n):
-            model.addConstr(quicksum(x[i, j, r] for j in range(i)) + quicksum(x[i, j, r] for j in range(i + 1, G.n)) 
-            - (quicksum(x[j, i, r] for j in range(i)) + quicksum(x[j, i, r] for j in range(i + 1, G.n))) == 0)
+    model.addConstrs(C[r] <= C[r - 1] for r in range(1, R))
+    model.addConstrs(quicksum(x[j, 0, r] for j in range(1, G.n)) == 2*g[r, 0] for r in range(R))
+    model.addConstrs(quicksum(x[i, j, r] for j in range(i)) + quicksum(x[j, i, r] for j in range(i + 1, G.n)) == 2*g[r, i] for r in range(R) for i in range( G.n))
+    model.addConstrs(g[r, 0] >= v[items[l].k, l, r] for l in range(len(items)) for r in range(R))
+    model.addConstrs(g[r, 0] >= v[s + K, l, r] for s in range(S) for l in range(len(items)) for r in range(R))
+    model.addConstrs(g[r, items[l].k] >= v[items[l].k, l, r] for l in range(len(items)) for r in range(R))
+    model.addConstrs(g[r, s + K] >= v[s + K, l, r] for s in range(S) for l in range(len(items)) for r in range(R))
 
     #capacity
     model.addConstrs(quicksum(v[items[l].k, l, r] for r in range(R)) == y[items[l].k, l] for l in range(len(items)))
@@ -115,12 +121,11 @@ def getModel(G: Graph.Graph, items: list(), Lk: list(), ui, S: int, R: int, q: l
     model.addConstrs(quicksum(a[l] for l in Lk[k - 1]) == quicksum(items[l].ul*y[items[l].k, l] - w[items[l].k, l] + quicksum(items[l].ul*y[s + K, l] - w[s + K, l] for s in range(S)) for l in Lk[k - 1]) - quicksum(ui[k - 1][s]*p[k, s + K] for s in range(S)) for k in range(1, K))
     model.addConstrs(y[0, l] + y[items[l].k, l] + quicksum(y[s + K, l] for s in range(S)) == 1 for l in range(len(items)))
     Cons_test1 ={}
-    for k in range(1, K):
+    '''for k in range(1, K):
         for l in Lk[k - 1]:
             for s in range(S):
-                Cons_test1[k,l,s]=model.addConstr(y[s + K, l] <= p[k, s + K])
-    tfcft = [Lk[k - 1] for k in range(1, K)]            
-    Cons_test2 = model.addConstrs(y[s + K, l] <= p[k, s + K] for k in range(1, K) for l in Lk[k - 1] for s in range(S))
+                Cons_test1[k,l,s]=model.addConstr(y[s + K, l] <= p[k, s + K]) '''       
+    model.addConstrs(y[s + K, l] <= p[k, s + K] for k in range(1, K) for l in Lk[k - 1] for s in range(S))
     model.addConstrs(a[l] >= items[l].ul - z[items[l].k, l] for l in range(len(items)))
     model.addConstrs(a[l] + b[s + K, l] >= items[l].ul - z[s + K, l] for s in range(S) for l in range(len(items)))
     model.addConstrs(quicksum(b[s + K, l] for l in Lk[k - 1]) <= ui[k - 1][s] for s in range(S) for k in range(1, K))
@@ -139,6 +144,9 @@ def getModel(G: Graph.Graph, items: list(), Lk: list(), ui, S: int, R: int, q: l
     model.write("D:\\Study\\Ph.D\\Projects\\Bilevel Optimization\\code\\python\\models\\test_v4.lp")
 
     model._x = x
+    model._g = g
+    model._v = v
+    model._y = y
     model._G = G
     model._R = R
     model.Params.lazyConstraints = 1

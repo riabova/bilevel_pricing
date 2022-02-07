@@ -1,6 +1,7 @@
 import bnb_v2
 import Graph
 import bilevel_v5
+import bilevel_v4
 from dataclasses import dataclass
 
 @dataclass
@@ -28,7 +29,7 @@ for line in f:
     inc = line.split()
     inconvs.append([int(x) for x in inc])
 f.close()
-f = open("..\\..\\data\\ul_n_10_s_1_test1.txt", 'r')
+f = open("..\\..\\data\\ul_n_10_s_1_v5_test1.txt", 'r')
 f.readline()
 k = 0
 for line in f:
@@ -42,7 +43,7 @@ for line in f:
             lk.append(len(items) - 1)
     Lk.append(lk)
 f.close()
-modelInf = bilevel_v5.getModel(G, items, Lk, inconvs, S, R, q)
+modelInf = bilevel_v4.getModel(G, items, Lk, inconvs, S, R, q)
 dThrshd = 2
 bnbTree = bnb_v2.BNB(G, modelInf[0], modelInf[1], modelInf[2], modelInf[3], modelInf[4], modelInf[5], items, Lk, inconvs, L, dThrshd)
 #bnbTree.solve()

@@ -3,6 +3,7 @@ import math
 import time
 from dataclasses import dataclass
 import bilevel_v4
+import bilevel_v5
 
 class BNB:
 

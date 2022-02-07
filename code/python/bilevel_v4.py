@@ -1,8 +1,5 @@
 from gurobipy import *
-from numpy.core import numeric
 import Graph
-import random
-import numpy as np
 from itertools import combinations
 import matplotlib.pyplot as plt
 
@@ -108,14 +105,8 @@ def getModel(G: Graph.Graph, items: list(), Lk: list(), ui, S: int, R: int, q: l
 
     #duality
     model.addConstrs(quicksum(a[l] for l in Lk[k - 1]) == quicksum(items[l].ul*y[items[l].k, l] - w[items[l].k, l] + quicksum(items[l].ul*y[s + K, l] - w[s + K, l] for s in range(S)) for l in Lk[k - 1]) - quicksum(ui[k - 1][s]*p[k, s + K] for s in range(S)) for k in range(1, K))
-    model.addConstrs(y[0, l] + y[items[l].k, l] + quicksum(y[s + K, l] for s in range(S)) == 1 for l in range(len(items)))
-    Cons_test1 ={}
-    for k in range(1, K):
-        for l in Lk[k - 1]:
-            for s in range(S):
-                Cons_test1[k,l,s]=model.addConstr(y[s + K, l] <= p[k, s + K])
-    tfcft = [Lk[k - 1] for k in range(1, K)]            
-    Cons_test2 = model.addConstrs(y[s + K, l] <= p[k, s + K] for k in range(1, K) for l in Lk[k - 1] for s in range(S))
+    model.addConstrs(y[0, l] + y[items[l].k, l] + quicksum(y[s + K, l] for s in range(S)) == 1 for l in range(len(items)))            
+    model.addConstrs(y[s + K, l] <= p[k, s + K] for k in range(1, K) for l in Lk[k - 1] for s in range(S))
     model.addConstrs(a[l] >= items[l].ul - z[items[l].k, l] for l in range(len(items)))
     model.addConstrs(a[l] + b[s + K, l] >= items[l].ul - z[s + K, l] for s in range(S) for l in range(len(items)))
     model.addConstrs(quicksum(b[s + K, l] for l in Lk[k - 1]) <= ui[k - 1][s] for s in range(S) for k in range(1, K))
