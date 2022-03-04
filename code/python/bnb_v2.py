@@ -56,9 +56,9 @@ class BNB:
         self.L = L
         self.distThrshd = distThrshd
         self.model.Params.OutputFlag = 0
-        start = time.time()
-        self.model.optimize(bilevel_v4.callback_mult)
-        print("Solved in %g" % (time.time() - start))
+        #start = time.time()
+        self.model.optimize(bilevel_v5.callback_mult)
+        #print("Solved in %g" % (time.time() - start))
         #self.model.Params.OutputFlag = 0
         root = self.Node(self.numNodes, -1, self.model.objVal, -1)
         root.parent = root
@@ -115,7 +115,7 @@ class BNB:
             current = current.parent
 
         if(node.name != 0):
-            self.model.optimize(bilevel_v4.callback_mult)
+            self.model.optimize(bilevel_v5.callback_mult)
             node.obj = self.model.objVal
         if (self.model.status != 3):
             if (self.bestNode == -1 or math.floor(node.obj) > self.bestNode.obj):
@@ -169,3 +169,4 @@ class BNB:
         for i, j, r in self.x.keys():
             if self.x[i, j, r].x > 0.5:
                 print("%d, %d, %d" % (i, j, r))
+        print("Routing cost: %g" % self.model.getVarByName("C_0").x)
