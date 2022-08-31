@@ -67,12 +67,14 @@ def getModel(G: Graph.Graph, items: list(), Lk: list(), ui, S: int, R: int, q: l
     b = {} #follower's dual 2
     p = {} #follower visits i
     g = {}
-
+    
+    #rev = model.addVar(vtype=GRB.CONTINUOUS, name="rev")
+    rCost = model.addVar(vtype=GRB.CONTINUOUS, name="rCost")
     for i in range(1, G.n):
         for r in range(R):
-            x[i, 0, r] = model.addVar(vtype=GRB.INTEGER, ub=2, name="x_%g_%g_%g" % (i, 0, r))
+            x[i, 0, r] = model.addVar(vtype=GRB.BINARY, ub=2, name="x_%g_%g_%g" % (i, 0, r))
             for j in range(1, i):
-                x[i, j, r] = model.addVar(obj=G.dist[i, j], vtype=GRB.BINARY, name="x_%g_%g_%g" % (i, j, r))
+                x[i, j, r] = model.addVar(vtype=GRB.BINARY, name="x_%g_%g_%g" % (i, j, r))
     for r in range(R):
         C[r] = model.addVar(obj=1, vtype=GRB.CONTINUOUS, name="C_%g" % r)
         for i in range(G.n):
@@ -81,7 +83,7 @@ def getModel(G: Graph.Graph, items: list(), Lk: list(), ui, S: int, R: int, q: l
     for l in range(len(items)):
         y[items[l].k, l] = model.addVar(vtype=GRB.BINARY, name='y_%g_%g' % (items[l].k, l))
         y[0, l] = model.addVar(vtype=GRB.BINARY, name='y_%g_%g' % (0, l))
-        z[items[l].k, l] = model.addVar(vtype=GRB.CONTINUOUS, lb=items[l].lb, name='z_%g_%g' % (items[l].k, l))
+        #z[items[l].k, l] = model.addVar(vtype=GRB.CONTINUOUS, lb=items[l].lb, name='z_%g_%g' % (items[l].k, l))
         w[items[l].k, l] = model.addVar(obj=-1, vtype=GRB.CONTINUOUS, name='w_%g_%g' % (items[l].k, l))
         a[l] = model.addVar(vtype=GRB.CONTINUOUS, name='a_%g' % l)
         for r in range(R):
@@ -99,8 +101,10 @@ def getModel(G: Graph.Graph, items: list(), Lk: list(), ui, S: int, R: int, q: l
 
     model.update()
 
-    model.addConstr(x[7, 0, 0] == 1)
+    #model.addConstr(x[7, 0, 0] == 1)
+    #model.addConstr(rev == quicksum(w[items[l].k, l] + quicksum(w[s + K, l] for s in range(S)) for l in range(len(items))))
     #model.addConstr(y[8, 1] == 1)
+    model.addConstr(rCost == quicksum(C[r] for r in range(R)))
 
     #balance
     model.addConstrs(C[r] <= C[r - 1] for r in range(1, R))
@@ -121,17 +125,17 @@ def getModel(G: Graph.Graph, items: list(), Lk: list(), ui, S: int, R: int, q: l
     model.addConstrs(quicksum(a[l] for l in Lk[k - 1]) == quicksum(items[l].ul*y[items[l].k, l] - w[items[l].k, l] + quicksum(items[l].ul*y[s + K, l] - w[s + K, l] for s in range(S)) for l in Lk[k - 1]) - quicksum(ui[k - 1][s]*p[k, s + K] for s in range(S)) for k in range(1, K))
     model.addConstrs(y[0, l] + y[items[l].k, l] + quicksum(y[s + K, l] for s in range(S)) == 1 for l in range(len(items)))     
     model.addConstrs(y[s + K, l] <= p[k, s + K] for k in range(1, K) for l in Lk[k - 1] for s in range(S))
-    model.addConstrs(a[l] >= items[l].ul - z[items[l].k, l] for l in range(len(items)))
+    model.addConstrs(a[l] >= items[l].ul - items[l].price for l in range(len(items)))
     model.addConstrs(a[l] + b[s + K, l] >= items[l].ul - z[s + K, l] for s in range(S) for l in range(len(items)))
     model.addConstrs(quicksum(b[s + K, l] for l in Lk[k - 1]) <= ui[k - 1][s] for s in range(S) for k in range(1, K))
 
     #linearization
-    model.addConstrs(w[items[l].k, l] <= z[items[l].k, l] for l in range(len(items)))
+    model.addConstrs(w[items[l].k, l] <= items[l].price for l in range(len(items)))
     model.addConstrs(w[s + K, l] <= z[s + K, l] for l in range(len(items)) for s in range(S))
-    model.addConstrs(w[items[l].k, l] <= 2*items[l].ul*y[items[l].k, l] for l in range(len(items)))
-    model.addConstrs(w[s + K, l] <= 2*items[l].ul*y[s + K, l] for s in range(S) for l in range(len(items)))
-    model.addConstrs(w[items[l].k, l] >= z[items[l].k, l] - 2*items[l].ul*(1 - y[items[l].k, l]) for l in range(len(items)))
-    model.addConstrs(w[s + K, l] >= z[s + K, l] - 2*items[l].ul*(1 - y[s + K, l]) for s in range(S) for l in range(len(items)))
+    model.addConstrs(w[items[l].k, l] <= items[l].price*y[items[l].k, l] for l in range(len(items)))
+    model.addConstrs(w[s + K, l] <= items[l].price*y[s + K, l] for s in range(S) for l in range(len(items)))
+    model.addConstrs(w[items[l].k, l] >= items[l].price - 1.1*items[l].price*(1 - y[items[l].k, l]) for l in range(len(items)))
+    model.addConstrs(w[s + K, l] >= z[s + K, l] - 1.1*items[l].price*(1 - y[s + K, l]) for s in range(S) for l in range(len(items)))
 
     '''for k in range(1, K):
         for l in range(L):

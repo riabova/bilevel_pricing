@@ -31,10 +31,8 @@ G = Graph.Graph()
 S=3
 
 #bnbTree.plotRoute()
-def get_sol_info(file, p, s, l):
-    G = Graph.Graph()
+def get_sol_info(G, p, s, l):
     S=s #change!
-    G.read1(file, S=S, seed=1)
     q = [G.q]*G.r
     L = l
     h = np.random.uniform(0.01*G.q, 0.05*G.q, L)
@@ -62,15 +60,16 @@ def get_sol_info(file, p, s, l):
 if __name__ == "__main__":
     #test over instances
     input_path = sys.argv[1]
-    s = int(sys.argv[2])
-    l = int(sys.argv[3])
+    s = 3
+    l = 2
     script_dir = os.path.dirname(os.path.realpath(__file__))
     print(script_dir)
-    pct = float(sys.argv[4])
-    rel_path = "\output\stats" + input_path[-12:-4] + "_p%d.csv" % (100*pct)
-    print(rel_path)
+    pct = 0.3
+    G = Graph.Graph()
+    G.read1(input_path, S=S, seed=1)
+    rel_path = "\output\stats" + G.name + "_p%d.csv" % (100*pct)
     with open(script_dir + rel_path, "w", encoding="utf-16") as f1:
         f = csv.writer(f1, lineterminator="\n")
         f.writerow(["Instance", "Profit", "Routing Cost", "Runtime", "Gap"])
-        sol_info = get_sol_info(input_path, pct, s, l)
-        f.writerow([input_path[-12:-4]] + sol_info)
+        sol_info = get_sol_info(G, pct, s, l)
+        f.writerow([G.name] + sol_info)

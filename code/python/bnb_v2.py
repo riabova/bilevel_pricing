@@ -1,13 +1,15 @@
 import queue
 import math
 import time
-from dataclasses import dataclass
+import random
+import numpy as np
 import bilevel_v4
 import bilevel_v5
+import matplotlib.pyplot as plt
+from matplotlib.offsetbox import OffsetImage, AnnotationBbox
 
 class BNB:
 
-    @dataclass
     class Node:
         childRight = 0
         childLeft = 0
@@ -55,10 +57,11 @@ class BNB:
         self.S = len(ui[0])
         self.L = L
         self.distThrshd = distThrshd
-        self.model.Params.OutputFlag = 0
-        #start = time.time()
+        #self.model.Params.OutputFlag = 0
+        self.model.setParam('TimeLimit', 6*60*60)
+        start = time.time()
         self.model.optimize(bilevel_v5.callback_mult)
-        #print("Solved in %g" % (time.time() - start))
+        self.time =  (time.time() - start)
         #self.model.Params.OutputFlag = 0
         root = self.Node(self.numNodes, -1, self.model.objVal, -1)
         root.parent = root
@@ -150,6 +153,13 @@ class BNB:
             var.UB = 1
             current = current.parent
 
+    def store_sol_info(self):
+        self.profit = -self.model.objVal
+        #self.rCost = sum([self.model.getVarByName("C_%g").x % r for r in range(self.G.r)])
+        #self.rev = self.model.getVarByName("rev").x
+        self.rCost = self.model.getVarByName("rCost").x
+        self.gap = self.model.MIPGap
+
     def printSol(self):
         print("Leader's objective: %g" % -self.model.objVal)
         print("Customers decisions:")
@@ -160,13 +170,40 @@ class BNB:
             + sum(self.items[l].ul*self.y[s + self.K, l].x - self.w[s + self.K, l].x for s in range(self.S)) for l in self.Lk[k - 1]), 
             sum(self.ui[k - 1][s]*self.p[k, s + self.K].x for s in range(self.S))))
             for l in self.Lk[k - 1]:
-                print("%d, %d: %g %g"  % (k, self.items[l].type, self.y[self.items[l].k, l].x, self.items[l].ul - self.z[self.items[l].k, l].x))
+                print("%d, %d: %g %g %g"  % (k, self.items[l].type, self.y[self.items[l].k, l].x, self.items[l].ul - self.items[l].price, self.items[l].price*self.y[self.items[l].k, l].x))
                 print("%d, %d: %g -"  % (0, self.items[l].type, self.y[0, l].x))
                 for s in range(self.S):
-                    print("%d, %d: %g %g"  % (s + self.K, self.items[l].type, self.y[s + self.K, l].x,  self.items[l].ul - self.z[s + self.K, l].x))
+                    print("%d, %d: %g %g %g"  % (s + self.K, self.items[l].type, self.y[s + self.K, l].x,  self.items[l].ul - self.z[s + self.K, l].x, self.w[s + self.K, l].x))
 
         print("Routing:")
         for i, j, r in self.x.keys():
             if self.x[i, j, r].x > 0.5:
                 print("%d, %d, %d" % (i, j, r))
-        print("Routing cost: %g" % self.model.getVarByName("C_0").x)
+        print("Routing cost: %g" % self.model.getVarByName("rCost").x)#sum([self.model.getVarByName("C_%g").x % r for r in range(self.G.r)]))
+        #print("Revenue: %g" % self.model.getVarByName("rev").x)
+
+    def plotRoute(self):
+        home = OffsetImage(plt.imread("..\\..\\modelling\\img\\home.png"), zoom=0.55)
+        wh = OffsetImage(plt.imread("..\\..\\modelling\\img\\warehouse.png"), zoom=0.55)
+        store = OffsetImage(plt.imread("..\\..\\modelling\\img\\store.png"), zoom=0.55)
+        fig, ax = plt.subplots(figsize=(10, 10))
+        ax.axis('off')
+        coords = np.transpose(self.G.points)
+        plt.xlim([min(coords[0]) - 3, max(coords[0]) + 3])
+        plt.ylim([min(coords[1]) - 3, max(coords[1]) + 3])
+        ab = AnnotationBbox(wh, (self.G.points[0][0], self.G.points[0][1]), frameon=False)
+        ax.add_artist(ab)
+        for r in range(self.G.r):
+            rgb = (random.random(), random.random(), random.random())
+            for i in range(self.n):
+                for j in range(i):
+                    if self.x[i, j, r].x > 0.5:
+                        plt.plot([self.G.points[i][0], self.G.points[j][0]], [self.G.points[i][1], self.G.points[j][1]], color=rgb, linewidth=4.0 )
+        for k in range(1, self.K):
+            ab = AnnotationBbox(home, (self.G.points[k][0], self.G.points[k][1]), frameon=False)
+            ax.add_artist(ab)
+        for s in range(self.S):
+            ab = AnnotationBbox(store, (self.G.points[s + self.K][0], self.G.points[s + self.K][1]), frameon=False)
+            ax.add_artist(ab)
+        #plt.show()
+        plt.savefig("..\\..\\modelling\\img\\routs\\routs_n%d_s%d_r%d.png" % (self.n, self.S, self.G.r))

@@ -5,10 +5,12 @@ import matplotlib.pyplot as plt
 
 class Graph:
     points = []
+    name = ""
 
     def read(self, file: str, S: int, seed: int):
         f = open(file, "r")
         lines = f.readlines()
+        self.name = lines[0].split(": ")[1]
         self.n = int(lines[3].split(": ")[1])
         self.r = int(lines[0].split("-k")[1])
         self.q = int(lines[5].split(": ")[1])
@@ -30,6 +32,7 @@ class Graph:
     def read1(self, file: str, S: int, seed: int):
         f = open(file, "r")
         lines = f.readlines()
+        self.name = lines[0].split(": ")[1][:-1]
         self.n = int(lines[3].split(": ")[1])
         self.r = int(lines[0].split("-k")[1])
         self.q = int(lines[5].split(": ")[1])
@@ -38,7 +41,7 @@ class Graph:
             self.points.append([float(lines[pt].split()[1]), float(lines[pt].split()[2])])
         f.close()
         kmeans = KMeans(n_clusters=S)
-        kmeans.fit(self.points)
+        kmeans.fit(self.points[1:])
         stores  = kmeans.cluster_centers_
         #plt.plot(self.points[0][0], self.points[0][1], "o")
         #plt.plot(np.transpose(self.points)[0], np.transpose(self.points)[1], "o")

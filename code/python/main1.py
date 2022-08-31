@@ -31,10 +31,8 @@ G = Graph.Graph()
 S=3
 
 #bnbTree.plotRoute()
-def get_sol_info(file, p, s, l):
-    G = Graph.Graph()
+def get_sol_info(G, p, s, l):
     S=s #change!
-    G.read1(file, S=S, seed=1)
     q = [G.q]*G.r
     L = l
     h = np.random.uniform(0.01*G.q, 0.05*G.q, L)
@@ -56,21 +54,23 @@ def get_sol_info(file, p, s, l):
     dThrshd = 2 #change!
     bnbTree = bnb_v2.BNB(G, modelInf[0], modelInf[1], modelInf[2], modelInf[3], modelInf[4], modelInf[5], items, Lk, inconvs, L, dThrshd)
     #bnbTree.solve()
+    bnbTree.printSol()
     bnbTree.store_sol_info()
     return [bnbTree.profit, bnbTree.rCost, bnbTree.time, bnbTree.gap]
 
 if __name__ == "__main__":
     #test over instances
-    input_path = sys.argv[1]
-    s = int(sys.argv[2])
-    l = int(sys.argv[3])
+    #input_path = sys.argv[1]
+    s = 3
+    l = 2
     script_dir = os.path.dirname(os.path.realpath(__file__))
-    print(script_dir)
-    pct = float(sys.argv[4])
-    rel_path = "\output\stats" + input_path[-12:-4] + "_p%d.csv" % (100*pct)
-    print(rel_path)
+    pct = 2
+    G = Graph.Graph()
+    G.read1("D:\Study\Ph.D\Projects\Bilevel Optimization\data\\tests\E-n22-k4.vrp", S=S, seed=1)
+    sol_info = get_sol_info(G, pct, s, l)
+    '''rel_path = "\output\stats" + G.name + "_p%d.csv" % (100*pct)
     with open(script_dir + rel_path, "w", encoding="utf-16") as f1:
         f = csv.writer(f1, lineterminator="\n")
         f.writerow(["Instance", "Profit", "Routing Cost", "Runtime", "Gap"])
-        sol_info = get_sol_info(input_path, pct, s, l)
-        f.writerow([input_path[-12:-4]] + sol_info)
+        sol_info = get_sol_info(G, pct, s, l)
+        f.writerow([G.name] + sol_info)'''
