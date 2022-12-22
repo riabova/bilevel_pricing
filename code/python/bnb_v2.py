@@ -3,8 +3,10 @@ import math
 import time
 import random
 import numpy as np
-import bilevel_v4
+#import bilevel_v4
 import bilevel_v5
+import folium
+from folium.features import CustomIcon
 import matplotlib.pyplot as plt
 from matplotlib.offsetbox import OffsetImage, AnnotationBbox
 
@@ -41,7 +43,7 @@ class BNB:
     depth = 0
     UB = 0
 
-    def __init__(self, graph, model, x, y, z, w, p, items, Lk, ui, L, distThrshd):
+    def __init__(self, graph, model, x, y, z, w, p, items, Lk, ui, L, distThrshd, I_coef):
         self.G = graph
         self.model = model
         self.x = x
@@ -57,7 +59,8 @@ class BNB:
         self.S = len(ui[0])
         self.L = L
         self.distThrshd = distThrshd
-        #self.model.Params.OutputFlag = 0
+        self.I_coef = I_coef
+        self.model.Params.OutputFlag = 0
         self.model.setParam('TimeLimit', 6*60*60)
         start = time.time()
         self.model.optimize(bilevel_v5.callback_mult)
@@ -70,36 +73,49 @@ class BNB:
 
     def findConflictPair(self):
         for k in range(1, self.K):
-                for i in range(self.K, self.K + self.S):#self.n):
-                    if self.G.dist[i, k] > self.distThrshd:
-                            flag = 0
-                            for l in self.Lk[k - 1]:
-                                if self.y[k, l].x > 0.8:
-                                    y1 = self.y[k, l]
-                                    flag += 1
-                                    break
-                            if flag > 0:
-                                for l in self.Lk[k - 1]:
-                                    if self.y[i, l].x > 0.8:
-                                        y2 = self.y[i, l]
-                                        flag += 1
-                                    if flag > 1:
-                                        return y1, y2
-                    for j in range(self.K, i):
-                        if self.G.dist[i, j] > self.distThrshd:
-                            flag = 0
+            for i in range(self.K, self.K + self.S):#self.n):
+                if self.G.dist[i, k] > self.distThrshd:
+                        flag = 0
+                        for l in self.Lk[k - 1]:
+                            if self.y[k, l].x > 0.8:
+                                y1 = self.y[k, l]
+                                flag += 1
+                                break
+                        if flag > 0:
                             for l in self.Lk[k - 1]:
                                 if self.y[i, l].x > 0.8:
-                                    y1 = self.y[i, l]
+                                    y2 = self.y[i, l]
                                     flag += 1
-                                    break
-                            if flag > 0:
-                                for l in self.Lk[k - 1]:
-                                    if self.y[j, l].x > 0.8:
-                                        y2 = self.y[j, l]
-                                        flag += 1
-                                    if flag > 1:
-                                        return y1, y2
+                                if flag > 1:
+                                    return y1, y2
+                for j in range(self.K, i):
+                    if self.G.dist[i, j] > self.distThrshd:
+                        flag = 0
+                        for l in self.Lk[k - 1]:
+                            if self.y[i, l].x > 0.8:
+                                y1 = self.y[i, l]
+                                flag += 1
+                                break
+                        if flag > 0:
+                            for l in self.Lk[k - 1]:
+                                if self.y[j, l].x > 0.8:
+                                    y2 = self.y[j, l]
+                                    flag += 1
+                                if flag > 1:
+                                    return y1, y2
+        return -1
+
+    def findConflictPair1a(self): #restricts any 2 stores together
+        for k in range(1, self.K):
+            for l in self.Lk[k - 1]:
+                flag = 0
+                sLst = []
+                for s in range(self.S):
+                    if self.y[s + self.K, l].x > 0.5:
+                        flag += 1
+                        sLst.append(s + self.K)
+                        if flag > 1:
+                            return sLst[0], sLst[1]
         return -1
 
     def solve(self):
@@ -122,7 +138,7 @@ class BNB:
             node.obj = self.model.objVal
         if (self.model.status != 3):
             if (self.bestNode == -1 or math.floor(node.obj) > self.bestNode.obj):
-                confl = self.findConflictPair()
+                confl = self.findConflictPair1a()
                 print(confl)
                 if confl == -1:  #candidate (no conflict)
                     node.status = 2
@@ -159,6 +175,16 @@ class BNB:
         #self.rev = self.model.getVarByName("rev").x
         self.rCost = self.model.getVarByName("rCost").x
         self.gap = self.model.MIPGap
+        self.discStats = []
+        '''for k in range(1, self.K):
+            prices = []
+            disc = 0
+            for l in self.Lk[k - 1]:
+                prices.append(self.items[l].price)
+                for s in range(self.S):
+                    if self.y[self.K + s, l].x >= 0.5:
+                        disc += self.items[l].price - self.z[self.K + s, l].x
+            self.discStats.append([disc, prices])'''
 
     def printSol(self):
         print("Leader's objective: %g" % -self.model.objVal)
@@ -170,10 +196,10 @@ class BNB:
             + sum(self.items[l].ul*self.y[s + self.K, l].x - self.w[s + self.K, l].x for s in range(self.S)) for l in self.Lk[k - 1]), 
             sum(self.ui[k - 1][s]*self.p[k, s + self.K].x for s in range(self.S))))
             for l in self.Lk[k - 1]:
-                print("%d, %d: %g %g %g"  % (k, self.items[l].type, self.y[self.items[l].k, l].x, self.items[l].ul - self.items[l].price, self.items[l].price*self.y[self.items[l].k, l].x))
+                print("%d, %d: %g %g %g %g"  % (k, self.items[l].type, self.y[self.items[l].k, l].x, self.items[l].ul, self.items[l].price, self.items[l].price))
                 print("%d, %d: %g -"  % (0, self.items[l].type, self.y[0, l].x))
                 for s in range(self.S):
-                    print("%d, %d: %g %g %g"  % (s + self.K, self.items[l].type, self.y[s + self.K, l].x,  self.items[l].ul - self.z[s + self.K, l].x, self.w[s + self.K, l].x))
+                    print("%d, %d: %g %g %g %g"  % (s + self.K, self.items[l].type, self.y[s + self.K, l].x,  self.items[l].ul, self.ui[k - 1][s], self.z[s + self.K, l].x))
 
         print("Routing:")
         for i, j, r in self.x.keys():
@@ -183,9 +209,9 @@ class BNB:
         #print("Revenue: %g" % self.model.getVarByName("rev").x)
 
     def plotRoute(self):
-        home = OffsetImage(plt.imread("..\\..\\modelling\\img\\home.png"), zoom=0.55)
-        wh = OffsetImage(plt.imread("..\\..\\modelling\\img\\warehouse.png"), zoom=0.55)
-        store = OffsetImage(plt.imread("..\\..\\modelling\\img\\store.png"), zoom=0.55)
+        home = OffsetImage(plt.imread("D:\Study\Ph.D\Projects\Bilevel Optimization\papers\img\loc_pricing\home.png"), zoom=0.55)
+        wh = OffsetImage(plt.imread("D:\Study\Ph.D\Projects\Bilevel Optimization\papers\img\loc_pricing\warehouse.png"), zoom=0.55)
+        store = OffsetImage(plt.imread("D:\Study\Ph.D\Projects\Bilevel Optimization\papers\img\loc_pricing\store.png"), zoom=0.55)
         fig, ax = plt.subplots(figsize=(10, 10))
         ax.axis('off')
         coords = np.transpose(self.G.points)
@@ -206,4 +232,32 @@ class BNB:
             ab = AnnotationBbox(store, (self.G.points[s + self.K][0], self.G.points[s + self.K][1]), frameon=False)
             ax.add_artist(ab)
         #plt.show()
-        plt.savefig("..\\..\\modelling\\img\\routs\\routs_n%d_s%d_r%d.png" % (self.n, self.S, self.G.r))
+        plt.savefig("D:\Study\Ph.D\Projects\Bilevel Optimization\data\\results\img\\routs\\routs_n%d_s%d_r%d.png" % (self.n, self.S, self.G.r))
+
+    def plotRouteMap(self):
+        wh = CustomIcon("D:\Study\Ph.D\Projects\Bilevel Optimization\papers\img\loc_pricing\warehouse.png", icon_size=(50, 25))
+        m = folium.Map(location=(42.93, -78.79), zoom_start=11, tiles=None)
+        base_map = folium.FeatureGroup(name='Basemap', overlay=True, control=False)
+        folium.TileLayer(tiles='OpenStreetMap').add_to(base_map)
+        base_map.add_to(m)
+        fg = folium.FeatureGroup(name="stores", overlay=False, show=False)
+        folium.Marker(location=self.G.points[0], icon=wh).add_to(fg)
+        for i in range(self.S):
+            store = CustomIcon("D:\Study\Ph.D\Projects\Bilevel Optimization\papers\img\loc_pricing\store.png", icon_size=(20, 20))
+            folium.Marker(location=self.G.points[self.K + i], icon=store).add_to(fg)
+        fg.add_to(m)
+        fg1 = folium.FeatureGroup(name="custs", overlay=False, show=False)
+        for i in range(1, self.K):
+            home = CustomIcon("D:\Study\Ph.D\Projects\Bilevel Optimization\papers\img\loc_pricing\home.png", icon_size=(20, 20))
+            folium.Marker(location=self.G.points[i], icon=home).add_to(fg1)
+        fg1.add_to(m)
+        fg2 = folium.FeatureGroup(name="routs", overlay=False, show=False)
+        colors = ["#FC6A03", "#74B72E", "2a9df4", "#4A3728"]
+        for r in range(self.G.r):
+            rgb = colors[r]#(random.randint(0, 255), random.randint(0, 255), random.randint(0, 255))
+            for i in range(self.n):
+                for j in range(i):
+                    if self.x[i, j, r].x > 0.5:
+                        folium.PolyLine([self.G.points[i], self.G.points[j]],color=rgb, weight=2).add_to(fg2)
+        fg2.add_to(m)
+        m.save("D:\Study\Ph.D\Projects\Bilevel Optimization\data\\results\img\\routs\\routs_n%d_s%d_r%d_I_%g.html" % (self.n, self.S, self.G.r, self.I_coef))

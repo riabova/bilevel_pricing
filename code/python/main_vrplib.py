@@ -67,24 +67,25 @@ def get_sol_info1a(G, I_coef, L, maxl, seed=7):
     price_lb = np.random.uniform(d/4, d, L)
     prices = [np.random.uniform(price_lb[i], 1.5 * price_lb[i]) for i in range(L)]
     inconvs = [[I_coef * G.dist[max(k, s), min(k, s)] for s in range(G.n - S, G.n)] for k in range(1, G.n - S)]
-    rng = np.random.default_rng()
+    rng = np.random.default_rng(seed=seed)
     for k in range(1, G.K):
-        num_prod = np.random.randint(1, maxl + 1)#!!!!!!!!!!!!!!!!!!!REPLACE BY 1!!!!!!!!!!!!!!!!!!!!!!!!!
+        num_prod = np.random.randint(1, maxl + 1)
         prods = rng.choice(L, size=num_prod)
         lk = []
-        for prod in prods:
-            u_p = prices[prod] + 100*np.random.exponential(1) #check units
-            items.append(Item(k, prod, h[prod], u_p, price_lb[prod], prices[prod]))
+        wts = np.random.multinomial(G.demands[k - 1], [1/num_prod]*num_prod)
+        for prod in range(num_prod):
+            u_p = prices[prods[prod]] + 100*np.random.exponential(1) #check units
+            items.append(Item(k, prods[prod], wts[prod], u_p, price_lb[prods[prod]], prices[prods[prod]]))
             lk.append(len(items) - 1)
         Lk.append(lk)
     modelInf = bilevel_v5.getModel(G, items, Lk, inconvs, S, G.r, q)
     dThrshd = 2 #change!
     bnbTree = bnb_v2.BNB(G, modelInf[0], modelInf[1], modelInf[2], modelInf[3], modelInf[4], modelInf[5], items, Lk, inconvs, L, dThrshd, I_coef)
-    #bnbTree.solve()
+    bnbTree.solve()
     #bnbTree.printSol()
     bnbTree.store_sol_info()
-    bnbTree.plotRouteMap()
-    return [bnbTree.profit, bnbTree.rCost, bnbTree.time, bnbTree.gap, bnbTree.numNodes]
+    #bnbTree.plotRouteMap()
+    return [bnbTree.profit, bnbTree.rCost, bnbTree.time, bnbTree.gap, bnbTree.numNodes, bnbTree.discStats]
 
 if __name__ == "__main__":
     #test over instances
@@ -95,30 +96,26 @@ if __name__ == "__main__":
     q = 100
     r = 4
     script_dir = os.path.dirname(os.path.realpath(__file__))
-    I_coef = 0.1
+    I_coef = 1000
     G = Graph.Graph()
-    #G.read1("D:\Study\Ph.D\Projects\Bilevel Optimization\data\\tests\A-n10-k1.dat", S=S, seed=1)
-    f1 = "D:\Study\Ph.D\Projects\Bilevel Optimization\data\Buffalo\ss_dists.txt"
+    #G.read1("D:\Study\Ph.D\Projects\Bilevel Optimization\data\\CVRP_A\A-n32-k5.vrp", S=s, seed=1)
+    '''f1 = "D:\Study\Ph.D\Projects\Bilevel Optimization\data\Buffalo\ss_dists.txt"
     f2 = "D:\Study\Ph.D\Projects\Bilevel Optimization\data\Buffalo\cc_dists.txt"
     f3 = "D:\Study\Ph.D\Projects\Bilevel Optimization\data\Buffalo\sc_dists.txt"
     f4 = "D:\Study\Ph.D\Projects\Bilevel Optimization\data\Buffalo\cust_coords.txt"
     f5 = "D:\Study\Ph.D\Projects\Bilevel Optimization\data\Buffalo\\ups_coords.txt"
-    #G.readWithDists(f1, f2, f3, f4, f5, q, r)
-    #G.readSampleWithDists(f1, f2, f3, f4, f5, 31, 4, q, r)
+    G.readSampleWithDists(f1, f2, f3, f4, f5, 11, 3, q, r)'''
     #sol_info = get_sol_info1a(G, I_coef, l, maxl)
     #print(sol_info)
-    I_coef = 0.3
-    G.readSampleWithDists(f1, f2, f3, f4, f5, 31, 4, q, r)
-    sol_info = get_sol_info1a(G, I_coef, l, maxl)
-    print(sol_info)
-    ''''insts = [(51, 10)]#, (63, 12)]#(11, 3), (21, 4), (31, 6), (41, 8), 
-    rel_path = "\output\statsBuffalo" + "_p30_10_63.csv"# % (100*I_coef)
+    rel_path = "\output\statsSetA\\inf_inc.csv"# % (100*I_coef)
+    rel_path1 = "\output\statsSetA\\inf_incDiscp.csv"# % (100*I_coef)
     with open(script_dir + rel_path, "w", encoding="utf-16") as file:
         f = csv.writer(file, lineterminator="\n")
         f.writerow(["Instance", "Profit", "Routing Cost", "Runtime", "Gap", "Nodes"])
-        for I_coef in [0.1, 0.3]:
-            G.readSampleWithDists(f1, f2, f3, f4, f5, 63, 10, q, r)
-            #G.readWithDists(f1, f2, f3, f4, f5, q, r)
-            sol_info = get_sol_info1a(G, I_coef, l, maxl)
-            #sol_info = get_sol_info(G, I_coef, s, l)
-            f.writerow(["k_%d" % 51] + sol_info)'''
+        with open(script_dir + rel_path1, "w", encoding="utf-16") as disc_file:
+            f1 = csv.writer(disc_file, lineterminator="\n")
+            for inFile in os.listdir("D:\Study\Ph.D\Projects\Bilevel Optimization\\data\CVRP_A - Copy"):
+                G.read1(os.path.join("D:\Study\Ph.D\Projects\Bilevel Optimization\data\\CVRP_A - Copy", inFile), S=s, seed=1)
+                sol_info = get_sol_info1a(G, I_coef, l, maxl)
+                f.writerow([inFile] + sol_info[:-1])
+                f1.writerow(sol_info[-1])

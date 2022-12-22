@@ -101,7 +101,9 @@ def getModel(G: Graph.Graph, items: list(), Lk: list(), ui, S: int, R: int, q: l
 
     model.update()
 
-    #model.addConstrs(y[s + K, l] == 0 for s in range(S) for l in range(len(items)))
+    #model.addConstr(x[7, 0, 0] == 1)
+    #model.addConstr(rev == quicksum(w[items[l].k, l] + quicksum(w[s + K, l] for s in range(S)) for l in range(len(items))))
+    #model.addConstr(y[8, 1] == 1)
 
     model.addConstr(rCost == quicksum(C[r] for r in range(R)))
 
@@ -109,7 +111,7 @@ def getModel(G: Graph.Graph, items: list(), Lk: list(), ui, S: int, R: int, q: l
     model.addConstrs(C[r] <= C[r - 1] for r in range(1, R))
     model.addConstrs(C[r] >= quicksum(G.dist[i, j]*x[i, j, r] for i in range(G.n) for j in range(i)) for r in range(R))
     model.addConstrs(quicksum(x[j, 0, r] for j in range(1, G.n)) == 2*g[r, 0] for r in range(R))
-    model.addConstrs(quicksum(x[i, j, r] for j in range(i)) + quicksum(x[j, i, r] for j in range(i + 1, G.n)) == 2*g[r, i] for r in range(R) for i in range(G.n))
+    model.addConstrs(quicksum(x[i, j, r] for j in range(i)) + quicksum(x[j, i, r] for j in range(i + 1, G.n)) == 2*g[r, i] for r in range(R) for i in range( G.n))
     model.addConstrs(g[r, 0] >= v[items[l].k, l, r] for l in range(len(items)) for r in range(R))
     model.addConstrs(g[r, 0] >= v[s + K, l, r] for s in range(S) for l in range(len(items)) for r in range(R))
     model.addConstrs(g[r, items[l].k] >= v[items[l].k, l, r] for l in range(len(items)) for r in range(R))
