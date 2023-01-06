@@ -47,13 +47,14 @@ def get_sol_info(G, I_coef, l):
                 lk.append(len(items) - 1)
         Lk.append(lk)
     #return items, inconvs, Lk
-    modelInf = bilevel_v5.getModel(G, items, Lk, inconvs, S, G.r, q)
+    print(sum([x.price for price in items]))
+    '''modelInf = bilevel_v5.getModel(G, items, Lk, inconvs, S, G.r, q)
     dThrshd = 2 #change!
     bnbTree = bnb_v2.BNB(G, modelInf[0], modelInf[1], modelInf[2], modelInf[3], modelInf[4], modelInf[5], items, Lk, inconvs, L, dThrshd)
     #bnbTree.solve()
     bnbTree.printSol()
     bnbTree.store_sol_info()
-    return [bnbTree.profit, bnbTree.rCost, bnbTree.time, bnbTree.gap]
+    return [bnbTree.profit, bnbTree.rCost, bnbTree.time, bnbTree.gap]'''
 
 def get_sol_info1a(G, I_coef, L, maxl, seed=7):
     S = G.S #change!
@@ -98,16 +99,16 @@ if __name__ == "__main__":
     script_dir = os.path.dirname(os.path.realpath(__file__))
     I_coef = 1000
     G = Graph.Graph()
-    #G.read1("D:\Study\Ph.D\Projects\Bilevel Optimization\data\\CVRP_A\A-n32-k5.vrp", S=s, seed=1)
+    G.read1("..\..\data\\CVRP_A\A-n32-k5.vrp", S=s, seed=1)
     '''f1 = "D:\Study\Ph.D\Projects\Bilevel Optimization\data\Buffalo\ss_dists.txt"
     f2 = "D:\Study\Ph.D\Projects\Bilevel Optimization\data\Buffalo\cc_dists.txt"
     f3 = "D:\Study\Ph.D\Projects\Bilevel Optimization\data\Buffalo\sc_dists.txt"
     f4 = "D:\Study\Ph.D\Projects\Bilevel Optimization\data\Buffalo\cust_coords.txt"
     f5 = "D:\Study\Ph.D\Projects\Bilevel Optimization\data\Buffalo\\ups_coords.txt"
     G.readSampleWithDists(f1, f2, f3, f4, f5, 11, 3, q, r)'''
-    #sol_info = get_sol_info1a(G, I_coef, l, maxl)
+    sol_info = get_sol_info1a(G, I_coef, l, maxl)
     #print(sol_info)
-    rel_path = "\output\statsSetA\\inf_inc.csv"# % (100*I_coef)
+    '''rel_path = "\output\statsSetA\\inf_inc.csv"# % (100*I_coef)
     rel_path1 = "\output\statsSetA\\inf_incDiscp.csv"# % (100*I_coef)
     with open(script_dir + rel_path, "w", encoding="utf-16") as file:
         f = csv.writer(file, lineterminator="\n")
@@ -118,4 +119,4 @@ if __name__ == "__main__":
                 G.read1(os.path.join("D:\Study\Ph.D\Projects\Bilevel Optimization\data\\CVRP_A - Copy", inFile), S=s, seed=1)
                 sol_info = get_sol_info1a(G, I_coef, l, maxl)
                 f.writerow([inFile] + sol_info[:-1])
-                f1.writerow(sol_info[-1])
+                f1.writerow(sol_info[-1])'''
