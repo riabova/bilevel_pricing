@@ -47,13 +47,14 @@ def get_sol_info(G, I_coef, l):
                 lk.append(len(items) - 1)
         Lk.append(lk)
     #return items, inconvs, Lk
-    modelInf = bilevel_v5.getModel(G, items, Lk, inconvs, S, G.r, q)
+    print(sum([x.price for price in items]))
+    '''modelInf = bilevel_v5.getModel(G, items, Lk, inconvs, S, G.r, q)
     dThrshd = 2 #change!
     bnbTree = bnb_v2.BNB(G, modelInf[0], modelInf[1], modelInf[2], modelInf[3], modelInf[4], modelInf[5], items, Lk, inconvs, L, dThrshd)
     #bnbTree.solve()
     bnbTree.printSol()
     bnbTree.store_sol_info()
-    return [bnbTree.profit, bnbTree.rCost, bnbTree.time, bnbTree.gap]
+    return [bnbTree.profit, bnbTree.rCost, bnbTree.time, bnbTree.gap]'''
 
 def get_sol_info1a(G, I_coef, L, maxl, seed=7):
     S = G.S #change!
@@ -107,7 +108,9 @@ if __name__ == "__main__":
     f5 = "D:\Study\Ph.D\Projects\Bilevel Optimization\data\Buffalo\\ups_coords.txt"
     G.readSampleWithDists(f1, f2, f3, f4, f5, 11, 3, q, r)'''
     sol_info = get_sol_info1a(G, I_coef, l, maxl)
+    sol_info = get_sol_info1a(G, I_coef, l, maxl)
     #print(sol_info)
+    '''rel_path = "\output\statsSetA\\inf_inc.csv"# % (100*I_coef)
     '''rel_path = "\output\statsSetA\\inf_inc.csv"# % (100*I_coef)
     rel_path1 = "\output\statsSetA\\inf_incDiscp.csv"# % (100*I_coef)
     with open(script_dir + rel_path, "w", encoding="utf-16") as file:

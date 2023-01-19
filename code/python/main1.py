@@ -59,16 +59,18 @@ def get_sol_info1a(G, I_coef, L, maxl, seed=7):
     S = G.S #change!
     q = [G.q]*G.r #vehicle capacities
     w = G.q * G.r/((G.K - 1) * maxl)
-    h = np.random.uniform(0.1*w, w, L) #product weights
+    h = np.random.uniform(0.1*w, 1.5 * w, L) #product weights
     items = []
     Lk = []
     d = max(G.dist.values())
     np.random.seed(seed)
     price_lb = np.random.uniform(d/4, d, L)
     prices = [np.random.uniform(price_lb[i], 1.5 * price_lb[i]) for i in range(L)]
-    inconvs = [[I_coef * G.dist[max(k, s), min(k, s)] for s in range(G.n - S, G.n)] for k in range(1, G.n - S)]
+    inconvs = []
     rng = np.random.default_rng()
     for k in range(1, G.K):
+        i_rate = np.random.random()
+        inconvs.append([i_rate * G.dist[max(k, s), min(k, s)] for s in range(G.n - S, G.n)])
         num_prod = np.random.randint(1, maxl + 1)#!!!!!!!!!!!!!!!!!!!REPLACE BY 1!!!!!!!!!!!!!!!!!!!!!!!!!
         prods = rng.choice(L, size=num_prod)
         lk = []
@@ -98,17 +100,17 @@ if __name__ == "__main__":
     I_coef = 0.1
     G = Graph.Graph()
     #G.read1("D:\Study\Ph.D\Projects\Bilevel Optimization\data\\tests\A-n10-k1.dat", S=S, seed=1)
-    f1 = "D:\Study\Ph.D\Projects\Bilevel Optimization\data\Buffalo\ss_dists.txt"
-    f2 = "D:\Study\Ph.D\Projects\Bilevel Optimization\data\Buffalo\cc_dists.txt"
-    f3 = "D:\Study\Ph.D\Projects\Bilevel Optimization\data\Buffalo\sc_dists.txt"
-    f4 = "D:\Study\Ph.D\Projects\Bilevel Optimization\data\Buffalo\cust_coords.txt"
-    f5 = "D:\Study\Ph.D\Projects\Bilevel Optimization\data\Buffalo\\ups_coords.txt"
+    f1 = "/home/gamma03/Projects/bilevel_pricing/data/Buffalo/ss_dists.txt"
+    f2 = "/home/gamma03/Projects/bilevel_pricing/data/Buffalo/cc_dists.txt"
+    f3 = "/home/gamma03/Projects/bilevel_pricing/data/Buffalo/sc_dists.txt"
+    f4 = "/home/gamma03/Projects/bilevel_pricing/data/Buffalo/cust_coords.txt"
+    f5 = "/home/gamma03/Projects/bilevel_pricing/data/Buffalo/ups_coords.txt"
     #G.readWithDists(f1, f2, f3, f4, f5, q, r)
     #G.readSampleWithDists(f1, f2, f3, f4, f5, 31, 4, q, r)
     #sol_info = get_sol_info1a(G, I_coef, l, maxl)
     #print(sol_info)
     I_coef = 0.3
-    G.readSampleWithDists(f1, f2, f3, f4, f5, 31, 4, q, r)
+    G.readSampleWithDists(f1, f2, f3, f4, f5, 11, 3, q, r)
     sol_info = get_sol_info1a(G, I_coef, l, maxl)
     print(sol_info)
     ''''insts = [(51, 10)]#, (63, 12)]#(11, 3), (21, 4), (31, 6), (41, 8), 
