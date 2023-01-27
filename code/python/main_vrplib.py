@@ -108,9 +108,7 @@ if __name__ == "__main__":
     f5 = "D:\Study\Ph.D\Projects\Bilevel Optimization\data\Buffalo\\ups_coords.txt"
     G.readSampleWithDists(f1, f2, f3, f4, f5, 11, 3, q, r)'''
     sol_info = get_sol_info1a(G, I_coef, l, maxl)
-    sol_info = get_sol_info1a(G, I_coef, l, maxl)
     #print(sol_info)
-    '''rel_path = "\output\statsSetA\\inf_inc.csv"# % (100*I_coef)
     '''rel_path = "\output\statsSetA\\inf_inc.csv"# % (100*I_coef)
     rel_path1 = "\output\statsSetA\\inf_incDiscp.csv"# % (100*I_coef)
     with open(script_dir + rel_path, "w", encoding="utf-16") as file:

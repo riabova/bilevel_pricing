@@ -10,14 +10,14 @@ import os, sys
 import matplotlib.pyplot as plt
 
 class Item:
-    def __init__(self, k, l, wt, util, bp, p):
+    def __init__(self, k, l, wt, util, bp, p, inc):
         self.k = k
         self.type = l
         self.w = wt
         self.ul = util
         self.lb = bp
         self.price = p
-        #self.ui = inc
+        self.inc = inc
 
 def gen_utils(K: int, P: int, G: Graph.Graph, seed: int):
     np.random.seed(seed)
@@ -59,27 +59,33 @@ def get_sol_info1a(G, I_coef, L, maxl, seed=7):
     S = G.S #change!
     q = [G.q]*G.r #vehicle capacities
     w = G.q * G.r/((G.K - 1) * maxl)
+    np.random.seed(seed)
     h = np.random.uniform(0.1*w, 1.5 * w, L) #product weights
     items = []
     Lk = []
-    d = max(G.dist.values())
-    np.random.seed(seed)
-    price_lb = np.random.uniform(d/4, d, L)
+    c = 0.1
+    d = c * max(G.dist.values())
+    #np.random.seed(seed)
+    price_lb = np.random.uniform(d/10, 2 * d, L)
     prices = [np.random.uniform(price_lb[i], 1.5 * price_lb[i]) for i in range(L)]
+    print(prices)
     inconvs = []
-    rng = np.random.default_rng()
+    rng = np.random.default_rng(seed=seed)
+    prodInc = [0.7 * np.random.normal(- h[l]) * np.random.binomial(1, 0.8) + 0.01 * np.random.normal(prices[l]) * np.random.binomial(1, 0.2) for l in range(L)]
+    print(prodInc)
     for k in range(1, G.K):
-        i_rate = np.random.random()
-        inconvs.append([i_rate * G.dist[max(k, s), min(k, s)] for s in range(G.n - S, G.n)])
+        i_rate = np.random.exponential(0.33)
+        dropout = np.random.binomial(1, 0.9, S)
+        inconvs.append([i_rate * G.dist[max(k, s), min(k, s)] * dropout[s - G.n + S] for s in range(G.n - S, G.n)])
         num_prod = np.random.randint(1, maxl + 1)#!!!!!!!!!!!!!!!!!!!REPLACE BY 1!!!!!!!!!!!!!!!!!!!!!!!!!
         prods = rng.choice(L, size=num_prod)
         lk = []
         for prod in prods:
             u_p = prices[prod] + 100*np.random.exponential(1) #check units
-            items.append(Item(k, prod, h[prod], u_p, price_lb[prod], prices[prod]))
+            items.append(Item(k, prod, h[prod], u_p, price_lb[prod], prices[prod], prodInc[prod]))
             lk.append(len(items) - 1)
         Lk.append(lk)
-    modelInf = bilevel_v5.getModel(G, items, Lk, inconvs, S, G.r, q)
+    modelInf = bilevel_v5.getModel(G, items, Lk, inconvs, S, G.r, q, c)
     dThrshd = 2 #change!
     bnbTree = bnb_v2.BNB(G, modelInf[0], modelInf[1], modelInf[2], modelInf[3], modelInf[4], modelInf[5], items, Lk, inconvs, L, dThrshd, I_coef)
     #bnbTree.solve()
@@ -100,11 +106,11 @@ if __name__ == "__main__":
     I_coef = 0.1
     G = Graph.Graph()
     #G.read1("D:\Study\Ph.D\Projects\Bilevel Optimization\data\\tests\A-n10-k1.dat", S=S, seed=1)
-    f1 = "/home/gamma03/Projects/bilevel_pricing/data/Buffalo/ss_dists.txt"
-    f2 = "/home/gamma03/Projects/bilevel_pricing/data/Buffalo/cc_dists.txt"
-    f3 = "/home/gamma03/Projects/bilevel_pricing/data/Buffalo/sc_dists.txt"
-    f4 = "/home/gamma03/Projects/bilevel_pricing/data/Buffalo/cust_coords.txt"
-    f5 = "/home/gamma03/Projects/bilevel_pricing/data/Buffalo/ups_coords.txt"
+    f1 = "D:\Study\Ph.D\Projects\Bilevel Optimization\\data\\Buffalo\\ss_dists.txt"
+    f2 = "D:\Study\Ph.D\Projects\Bilevel Optimization\\data\\Buffalo\\cc_dists.txt"
+    f3 = "D:\Study\Ph.D\Projects\Bilevel Optimization\\data\\Buffalo\\sc_dists.txt"
+    f4 = "D:\Study\Ph.D\Projects\Bilevel Optimization\\data\\Buffalo\\cust_coords.txt"
+    f5 = "D:\Study\Ph.D\Projects\Bilevel Optimization\\data\\Buffalo\\ups_coords.txt"
     #G.readWithDists(f1, f2, f3, f4, f5, q, r)
     #G.readSampleWithDists(f1, f2, f3, f4, f5, 31, 4, q, r)
     #sol_info = get_sol_info1a(G, I_coef, l, maxl)

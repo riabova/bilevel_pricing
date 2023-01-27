@@ -54,7 +54,7 @@ def process(G, comp, adj, vert, color):
             comp = process(G, comp, adj, v, color)
     return comp
 
-def getModel(G: Graph.Graph, items: list(), Lk: list(), ui, S: int, R: int, q: list()):
+def getModel(G: Graph.Graph, items: list(), Lk: list(), ui, S: int, R: int, q: list(), c: float):
     model = Model("bl5")
     K = G.n - S #number of customers (assume stores are the last s locations, 0 is depot)
     x = {} #leader's routing
@@ -107,7 +107,7 @@ def getModel(G: Graph.Graph, items: list(), Lk: list(), ui, S: int, R: int, q: l
 
     #balance
     model.addConstrs(C[r] <= C[r - 1] for r in range(1, R))
-    model.addConstrs(C[r] >= quicksum(G.dist[i, j]*x[i, j, r] for i in range(G.n) for j in range(i)) for r in range(R))
+    model.addConstrs(C[r] >= quicksum(c * G.dist[i, j]*x[i, j, r] for i in range(G.n) for j in range(i)) for r in range(R))
     model.addConstrs(quicksum(x[j, 0, r] for j in range(1, G.n)) == 2*g[r, 0] for r in range(R))
     model.addConstrs(quicksum(x[i, j, r] for j in range(i)) + quicksum(x[j, i, r] for j in range(i + 1, G.n)) == 2*g[r, i] for r in range(R) for i in range(G.n))
     model.addConstrs(g[r, 0] >= v[items[l].k, l, r] for l in range(len(items)) for r in range(R))
@@ -121,7 +121,7 @@ def getModel(G: Graph.Graph, items: list(), Lk: list(), ui, S: int, R: int, q: l
     model.addConstrs(quicksum(items[l].w*(v[items[l].k, l, r] + quicksum(v[s + K, l, r] for s in range(S))) for l in range(len(items))) <= q[r] for r in range(R))
 
     #duality
-    model.addConstrs(quicksum(a[l] for l in Lk[k - 1]) == quicksum(items[l].ul*y[items[l].k, l] - w[items[l].k, l] + quicksum(items[l].ul*y[s + K, l] - w[s + K, l] for s in range(S)) for l in Lk[k - 1]) - quicksum(ui[k - 1][s]*p[k, s + K] for s in range(S)) for k in range(1, K))
+    model.addConstrs(quicksum(a[l] for l in Lk[k - 1]) == quicksum(items[l].ul*y[items[l].k, l] - w[items[l].k, l] + quicksum(items[l].ul*y[s + K, l] - w[s + K, l] for s in range(S)) for l in Lk[k - 1]) - quicksum(ui[k - 1][s]*p[k, s + K] for s in range(S)) + quicksum(items[l].inc * quicksum(p[k, s + K] for s in range(S)) for l in Lk[k - 1]) for k in range(1, K))
     model.addConstrs(y[0, l] + y[items[l].k, l] + quicksum(y[s + K, l] for s in range(S)) == 1 for l in range(len(items)))     
     model.addConstrs(y[s + K, l] <= p[k, s + K] for k in range(1, K) for l in Lk[k - 1] for s in range(S))
     model.addConstrs(a[l] >= items[l].ul - items[l].price for l in range(len(items)))
