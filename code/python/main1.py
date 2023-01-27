@@ -71,7 +71,8 @@ def get_sol_info1a(G, I_coef, L, maxl, seed=7):
     print(prices)
     inconvs = []
     rng = np.random.default_rng(seed=seed)
-    prodInc = [0.7 * np.random.normal(- h[l]) * np.random.binomial(1, 0.8) + 0.01 * np.random.normal(prices[l]) * np.random.binomial(1, 0.2) for l in range(L)]
+    prodInc = [2 * np.random.normal(- h[l]) * np.random.binomial(1, 0.3) + 0.01 * np.random.normal(prices[l]) * np.random.binomial(1, 0.2) for l in range(L)]
+    prodInc = [prodInc[l] if -prodInc[l]/prices[l] > 0.03 or prodInc[l] > 0 else 0 for l in range(L)]
     print(prodInc)
     for k in range(1, G.K):
         i_rate = np.random.exponential(0.33)
