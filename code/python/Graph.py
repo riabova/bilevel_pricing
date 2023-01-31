@@ -1,5 +1,6 @@
 import math
 import numpy as np
+import RouteBuilder
 from sklearn.cluster import KMeans
 import matplotlib.pyplot as plt
 
@@ -121,6 +122,52 @@ class Graph:
         for i in range(self.S):
             line = f5.readline().split(", ")
             self.points.append([float(line[0]), float(line[1])])
+
+    def readSampleWOstores(self, ccf, c_coords_file, K, S, q, r, method="kmeans", rho=1):
+        f1 = open(ccf, "r")
+        self.dist = {}
+        self.K = K
+        self.q = q
+        self.r = r
+        self.S = S
+        self.n = self.K + self.S
+        f1.readline()
+        #read dists
+        self.max_dist = 0
+        for i in range(self.K):
+            line = f1.readline().split(" ")
+            for j in range(i):
+                self.dist[(i, j)] = float(line[j])
+                self.max_dist = max(self.max_dist, self.dist[(i, j)])
+        f2 = open(c_coords_file, "r")
+        for i in range(self.K):
+            line = f2.readline().split(", ")
+            self.points.append([float(line[0]), float(line[1])])
+        #generate stores
+        stores = self.makeStores(S, method=method, r=rho)
+        for s in stores:
+            self.points.append(list(s))
+        #calcuate dists to stores
+        rb = RouteBuilder.RouteBuilder()
+        for s in range(S):
+            for j in range(s):
+                self.dist[self.K + s, self.K + j] = rb.makeRequest1(stores[s], stores[j])
+            for k in range(self.K):
+                self.dist[self.K + s, k] = rb.makeRequest1(self.points[self.K + s], self.points[k])
+
+    def makeStores(self, S, method="kmeans", r=1):
+        if method == "kmeans":
+            kmeans = KMeans(n_clusters=S)
+            kmeans.fit(self.points[1:])
+            return kmeans.cluster_centers_
+        elif method == "radial":
+            origin = self.points[0]
+            coords = [[pt[0] - origin[0], pt[1] - origin[1]] for pt in self.points[1:]]
+            pcoords = [[r, np.arctan(pt[1]/pt[0])] for pt in coords]
+            kmeans = KMeans(n_clusters=S)
+            kmeans.fit(pcoords)
+            stores = kmeans.cluster_centers_
+            return [[pt[0] * np.cos(pt[1]) + origin[0], pt[0] * np.sin(pt[1]) + origin[1]] for pt in stores]
 
     def get_coords(self):
         return self.points

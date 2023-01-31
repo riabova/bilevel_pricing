@@ -196,7 +196,7 @@ class BNB:
             + sum(self.items[l].ul*self.y[s + self.K, l].x - self.w[s + self.K, l].x for s in range(self.S)) for l in self.Lk[k - 1]), 
             sum(self.ui[k - 1][s]*self.p[k, s + self.K].x for s in range(self.S))))
             for l in self.Lk[k - 1]:
-                print("%d, %d: %g %g %g %g"  % (k, self.items[l].type, self.y[self.items[l].k, l].x, self.items[l].ul, self.items[l].price, self.items[l].price))
+                print("%d, %d: %g %g %g"  % (k, self.items[l].type, self.y[self.items[l].k, l].x, self.items[l].ul, self.items[l].price))
                 print("%d, %d: %g -"  % (0, self.items[l].type, self.y[0, l].x))
                 for s in range(self.S):
                     print("%d, %d: %g %g %g %g"  % (s + self.K, self.items[l].type, self.y[s + self.K, l].x,  self.items[l].ul, self.ui[k - 1][s], self.z[s + self.K, l].x))
@@ -231,8 +231,8 @@ class BNB:
         for s in range(self.S):
             ab = AnnotationBbox(store, (self.G.points[s + self.K][0], self.G.points[s + self.K][1]), frameon=False)
             ax.add_artist(ab)
-        #plt.show()
-        plt.savefig("D:\Study\Ph.D\Projects\Bilevel Optimization\data\\results\img\\routs\\routs_n%d_s%d_r%d.png" % (self.n, self.S, self.G.r))
+        plt.show()
+        #plt.savefig("D:\Study\Ph.D\Projects\Bilevel Optimization\data\\results\img\\routs\\routs_n%d_s%d_r%d.png" % (self.n, self.S, self.G.r))
 
     def plotRouteMap(self):
         wh = CustomIcon("D:\Study\Ph.D\Projects\Bilevel Optimization\papers\img\loc_pricing\warehouse.png", icon_size=(50, 25))
@@ -242,17 +242,18 @@ class BNB:
         base_map.add_to(m)
         fg = folium.FeatureGroup(name="stores", overlay=False, show=False)
         folium.Marker(location=self.G.points[0], icon=wh).add_to(fg)
-        for i in range(self.S):
+        for s in range(self.S):
             store = CustomIcon("D:\Study\Ph.D\Projects\Bilevel Optimization\papers\img\loc_pricing\store.png", icon_size=(20, 20))
-            folium.Marker(location=self.G.points[self.K + i], icon=store).add_to(fg)
+            #print(self.G.points[self.K + s])
+            folium.Marker(location=self.G.points[self.K + s], icon=store, popup=s).add_to(fg)
         fg.add_to(m)
         fg1 = folium.FeatureGroup(name="custs", overlay=False, show=False)
         for i in range(1, self.K):
             home = CustomIcon("D:\Study\Ph.D\Projects\Bilevel Optimization\papers\img\loc_pricing\home.png", icon_size=(20, 20))
-            folium.Marker(location=self.G.points[i], icon=home).add_to(fg1)
+            folium.Marker(location=self.G.points[i], icon=home, popup=i).add_to(fg1)
         fg1.add_to(m)
         fg2 = folium.FeatureGroup(name="routs", overlay=False, show=False)
-        colors = ["#FC6A03", "#74B72E", "2a9df4", "#4A3728"]
+        colors = ["#FC6A03", "#74B72E", "#2A9DF4", "#4A3728"]
         for r in range(self.G.r):
             rgb = colors[r]#(random.randint(0, 255), random.randint(0, 255), random.randint(0, 255))
             for i in range(self.n):

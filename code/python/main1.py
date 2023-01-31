@@ -64,33 +64,36 @@ def get_sol_info1a(G, I_coef, L, maxl, seed=7):
     items = []
     Lk = []
     c = 0.1
-    d = c * max(G.dist.values())
+    d = c * G.max_dist
     #np.random.seed(seed)
     price_lb = np.random.uniform(d/10, 2 * d, L)
     prices = [np.random.uniform(price_lb[i], 1.5 * price_lb[i]) for i in range(L)]
-    print(prices)
+    #print(prices)
     inconvs = []
     rng = np.random.default_rng(seed=seed)
     prodInc = [2 * np.random.normal(- h[l]) * np.random.binomial(1, 0.3) + 0.01 * np.random.normal(prices[l]) * np.random.binomial(1, 0.2) for l in range(L)]
     prodInc = [prodInc[l] if -prodInc[l]/prices[l] > 0.03 or prodInc[l] > 0 else 0 for l in range(L)]
-    print(prodInc)
+    #print(prodInc)
     for k in range(1, G.K):
-        i_rate = np.random.exponential(0.33)
-        dropout = np.random.binomial(1, 0.9, S)
+        #print("Customer %d" % k)
+        i_rate = np.random.exponential(0.05)
+        dropout = np.random.binomial(1, 0.8, S)
         inconvs.append([i_rate * G.dist[max(k, s), min(k, s)] * dropout[s - G.n + S] for s in range(G.n - S, G.n)])
+        #print(inconvs[-1])
         num_prod = np.random.randint(1, maxl + 1)#!!!!!!!!!!!!!!!!!!!REPLACE BY 1!!!!!!!!!!!!!!!!!!!!!!!!!
-        prods = rng.choice(L, size=num_prod)
+        prods = rng.choice(L, size=num_prod, replace=False)
         lk = []
         for prod in prods:
             u_p = prices[prod] + 100*np.random.exponential(1) #check units
             items.append(Item(k, prod, h[prod], u_p, price_lb[prod], prices[prod], prodInc[prod]))
             lk.append(len(items) - 1)
+            #print(u_p, prices[prod])
         Lk.append(lk)
     modelInf = bilevel_v5.getModel(G, items, Lk, inconvs, S, G.r, q, c)
     dThrshd = 2 #change!
     bnbTree = bnb_v2.BNB(G, modelInf[0], modelInf[1], modelInf[2], modelInf[3], modelInf[4], modelInf[5], items, Lk, inconvs, L, dThrshd, I_coef)
     #bnbTree.solve()
-    #bnbTree.printSol()
+    bnbTree.printSol()
     bnbTree.store_sol_info()
     bnbTree.plotRouteMap()
     return [bnbTree.profit, bnbTree.rCost, bnbTree.time, bnbTree.gap, bnbTree.numNodes]
@@ -117,7 +120,7 @@ if __name__ == "__main__":
     #sol_info = get_sol_info1a(G, I_coef, l, maxl)
     #print(sol_info)
     I_coef = 0.3
-    G.readSampleWithDists(f1, f2, f3, f4, f5, 11, 3, q, r)
+    G.readSampleWOstores(f2, f4, 11, 3, q, r, method="radial", rho=0.02)
     sol_info = get_sol_info1a(G, I_coef, l, maxl)
     print(sol_info)
     ''''insts = [(51, 10)]#, (63, 12)]#(11, 3), (21, 4), (31, 6), (41, 8), 
