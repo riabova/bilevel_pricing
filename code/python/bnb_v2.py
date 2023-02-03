@@ -60,8 +60,8 @@ class BNB:
         self.L = L
         self.distThrshd = distThrshd
         self.I_coef = I_coef
-        self.model.Params.OutputFlag = 0
-        self.model.setParam('TimeLimit', 6*60*60)
+        #self.model.Params.OutputFlag = 0
+        self.model.setParam('TimeLimit', 36*60*60)
         start = time.time()
         self.model.optimize(bilevel_v5.callback_mult)
         self.time =  (time.time() - start)
@@ -244,7 +244,6 @@ class BNB:
         folium.Marker(location=self.G.points[0], icon=wh).add_to(fg)
         for s in range(self.S):
             store = CustomIcon("D:\Study\Ph.D\Projects\Bilevel Optimization\papers\img\loc_pricing\store.png", icon_size=(20, 20))
-            #print(self.G.points[self.K + s])
             folium.Marker(location=self.G.points[self.K + s], icon=store, popup=s).add_to(fg)
         fg.add_to(m)
         fg1 = folium.FeatureGroup(name="custs", overlay=False, show=False)
@@ -259,6 +258,6 @@ class BNB:
             for i in range(self.n):
                 for j in range(i):
                     if self.x[i, j, r].x > 0.5:
-                        folium.PolyLine([self.G.points[i], self.G.points[j]],color=rgb, weight=2).add_to(fg2)
+                        folium.PolyLine(self.G.routs[i, j], color=rgb, weight=3).add_to(fg2)
         fg2.add_to(m)
         m.save("D:\Study\Ph.D\Projects\Bilevel Optimization\data\\results\img\\routs\\routs_n%d_s%d_r%d_I_%g.html" % (self.n, self.S, self.G.r, self.I_coef))
