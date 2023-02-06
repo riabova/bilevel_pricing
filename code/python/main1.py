@@ -92,7 +92,7 @@ def get_sol_info1a(G, I_coef, L, maxl, seed=7):
     modelInf = bilevel_v5.getModel(G, items, Lk, inconvs, S, G.r, q, c)
     dThrshd = 2 #change!
     bnbTree = bnb_v2.BNB(G, modelInf[0], modelInf[1], modelInf[2], modelInf[3], modelInf[4], modelInf[5], items, Lk, inconvs, L, dThrshd, I_coef)
-    #bnbTree.solve()
+    bnbTree.solve()
     bnbTree.printSol()
     bnbTree.store_sol_info()
     bnbTree.plotRouteMap()
@@ -100,7 +100,14 @@ def get_sol_info1a(G, I_coef, L, maxl, seed=7):
 
 if __name__ == "__main__":
     #test over instances
-    #input_path = sys.argv[1]
+    in1= sys.argv[1]
+    in2= sys.argv[1]
+    in3= sys.argv[1]
+    in4= sys.argv[1]
+    in5= sys.argv[1]
+    in6= sys.argv[1]
+    in7= sys.argv[1]
+    in8= sys.argv[1]
     s = 3
     l = 10 #all products
     maxl = 3 #max products in cart
@@ -112,13 +119,13 @@ if __name__ == "__main__":
     tot_stores = 18
     G = Graph.Graph()
     #G.read1("D:\Study\Ph.D\Projects\Bilevel Optimization\data\\tests\A-n10-k1.dat", S=S, seed=1)
-    f1 = "D:\Study\Ph.D\Projects\Bilevel Optimization\\data\\Buffalo\\ss_dists.txt"
+    '''f1 = "D:\Study\Ph.D\Projects\Bilevel Optimization\\data\\Buffalo\\ss_dists.txt"
     f2 = "D:\Study\Ph.D\Projects\Bilevel Optimization\\data\\Buffalo\\cc_dists.txt"
     f3 = "D:\Study\Ph.D\Projects\Bilevel Optimization\\data\\Buffalo\\sc_dists.txt"
     f4 = "D:\Study\Ph.D\Projects\Bilevel Optimization\\data\\Buffalo\\cust_coords.txt"
-    f5 = "D:\Study\Ph.D\Projects\Bilevel Optimization\\data\\Buffalo\\ups_coords.txt"
-    #G.readWithDists(f1, f2, f3, f4, f5, q, r, rf1="D:\Study\Ph.D\Projects\Bilevel Optimization\\data\\Buffalo\\cc_routs.txt", rf2="D:\Study\Ph.D\Projects\Bilevel Optimization\\data\\Buffalo\\sc_routs.txt", rf3="D:\Study\Ph.D\Projects\Bilevel Optimization\\data\\Buffalo\\ss_routs.txt")
-    G.readSampleWithDists(f1, f2, f3, f4, f5, 11, 3, q, r, rf1="D:\Study\Ph.D\Projects\Bilevel Optimization\\data\\Buffalo\\cc_routs.txt", rf2="D:\Study\Ph.D\Projects\Bilevel Optimization\\data\\Buffalo\\sc_routs.txt", rf3="D:\Study\Ph.D\Projects\Bilevel Optimization\\data\\Buffalo\\ss_routs.txt", tot_custs=tot_custs, tot_stores=tot_stores)
+    f5 = "D:\Study\Ph.D\Projects\Bilevel Optimization\\data\\Buffalo\\ups_coords.txt"'''
+    G.readWithDists(in1, in2, in3, in4, in5, q, r, rf1=in6, rf2=in7, rf3=in8)
+    #G.readSampleWithDists(f1, f2, f3, f4, f5, 11, 3, q, r, rf1="D:\Study\Ph.D\Projects\Bilevel Optimization\\data\\Buffalo\\cc_routs.txt", rf2="D:\Study\Ph.D\Projects\Bilevel Optimization\\data\\Buffalo\\sc_routs.txt", rf3="D:\Study\Ph.D\Projects\Bilevel Optimization\\data\\Buffalo\\ss_routs.txt", tot_custs=tot_custs, tot_stores=tot_stores)
     #sol_info = get_sol_info1a(G, I_coef, l, maxl)
     #print(sol_info)
     I_coef = 0.3
