@@ -108,8 +108,8 @@ if __name__ == "__main__":
     r = 4
     script_dir = os.path.dirname(os.path.realpath(__file__))
     I_coef = 0.1
-    tot_custs = 64
-    tot_stores = 16
+    tot_custs = 63
+    tot_stores = 18
     G = Graph.Graph()
     #G.read1("D:\Study\Ph.D\Projects\Bilevel Optimization\data\\tests\A-n10-k1.dat", S=S, seed=1)
     f1 = "D:\Study\Ph.D\Projects\Bilevel Optimization\\data\\Buffalo\\ss_dists.txt"
@@ -117,8 +117,8 @@ if __name__ == "__main__":
     f3 = "D:\Study\Ph.D\Projects\Bilevel Optimization\\data\\Buffalo\\sc_dists.txt"
     f4 = "D:\Study\Ph.D\Projects\Bilevel Optimization\\data\\Buffalo\\cust_coords.txt"
     f5 = "D:\Study\Ph.D\Projects\Bilevel Optimization\\data\\Buffalo\\ups_coords.txt"
-    G.readWithDists(f1, f2, f3, f4, f5, q, r, rf1="D:\Study\Ph.D\Projects\Bilevel Optimization\\data\\Buffalo\\cc_routs.txt", rf2="D:\Study\Ph.D\Projects\Bilevel Optimization\\data\\Buffalo\\sc_routs.txt", rf3="D:\Study\Ph.D\Projects\Bilevel Optimization\\data\\Buffalo\\ss_routs.txt")
-    #G.readSampleWithDists(f1, f2, f3, f4, f5, 11, 3, q, r, rf1="D:\Study\Ph.D\Projects\Bilevel Optimization\\data\\Buffalo\\cc_routs.txt", rf2="D:\Study\Ph.D\Projects\Bilevel Optimization\\data\\Buffalo\\sc_routs.txt", rf3="D:\Study\Ph.D\Projects\Bilevel Optimization\\data\\Buffalo\\ss_routs.txt", tot_custs=tot_custs, tot_stores=tot_stores)
+    #G.readWithDists(f1, f2, f3, f4, f5, q, r, rf1="D:\Study\Ph.D\Projects\Bilevel Optimization\\data\\Buffalo\\cc_routs.txt", rf2="D:\Study\Ph.D\Projects\Bilevel Optimization\\data\\Buffalo\\sc_routs.txt", rf3="D:\Study\Ph.D\Projects\Bilevel Optimization\\data\\Buffalo\\ss_routs.txt")
+    G.readSampleWithDists(f1, f2, f3, f4, f5, 11, 3, q, r, rf1="D:\Study\Ph.D\Projects\Bilevel Optimization\\data\\Buffalo\\cc_routs.txt", rf2="D:\Study\Ph.D\Projects\Bilevel Optimization\\data\\Buffalo\\sc_routs.txt", rf3="D:\Study\Ph.D\Projects\Bilevel Optimization\\data\\Buffalo\\ss_routs.txt", tot_custs=tot_custs, tot_stores=tot_stores)
     #sol_info = get_sol_info1a(G, I_coef, l, maxl)
     #print(sol_info)
     I_coef = 0.3
