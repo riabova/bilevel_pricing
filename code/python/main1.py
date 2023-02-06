@@ -101,13 +101,13 @@ def get_sol_info1a(G, I_coef, L, maxl, seed=7):
 if __name__ == "__main__":
     #test over instances
     in1= sys.argv[1]
-    in2= sys.argv[1]
-    in3= sys.argv[1]
-    in4= sys.argv[1]
-    in5= sys.argv[1]
-    in6= sys.argv[1]
-    in7= sys.argv[1]
-    in8= sys.argv[1]
+    in2= sys.argv[2]
+    in3= sys.argv[3]
+    in4= sys.argv[4]
+    in5= sys.argv[5]
+    in6= sys.argv[6]
+    in7= sys.argv[7]
+    in8= sys.argv[8]
     s = 3
     l = 10 #all products
     maxl = 3 #max products in cart
