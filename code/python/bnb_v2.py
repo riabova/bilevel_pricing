@@ -60,7 +60,7 @@ class BNB:
         self.L = L
         self.distThrshd = distThrshd
         self.I_coef = I_coef
-        #self.model.Params.OutputFlag = 0
+        self.model.Params.OutputFlag = 0
         self.model.setParam('TimeLimit', 36*60*60)
         start = time.time()
         self.model.optimize(bilevel_v5.callback_mult)
@@ -252,7 +252,7 @@ class BNB:
             folium.Marker(location=self.G.points[i], icon=home, popup=i).add_to(fg1)
         fg1.add_to(m)
         fg2 = folium.FeatureGroup(name="routs", overlay=False, show=False)
-        colors = ["#FC6A03", "#74B72E", "#2A9DF4", "#4A3728"]
+        colors = ["#000000", "#0000ff", "#26580F", "#990000"]
         for r in range(self.G.r):
             rgb = colors[r]#(random.randint(0, 255), random.randint(0, 255), random.randint(0, 255))
             for i in range(self.n):

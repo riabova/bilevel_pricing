@@ -100,6 +100,7 @@ class Graph:
         if rf2:
             f7 = open(rf2, "r")
             for i in range(self.S):
+                for j in range(self.K):
                     self.routs[(self.K + i, j)] = [(float(x[1:].split(", ")[0]), float(x[:-1].split(", ")[1])) for x in f7.readline().split(")[")[1][:-2].split("), ")]
         if rf3:
             f8 = open(rf3, "r")
