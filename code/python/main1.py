@@ -72,13 +72,14 @@ def get_sol_info1a(G, I_coef, L, maxl, seed=7):
     inconvs = []
     rng = np.random.default_rng(seed=seed)
     prodInc = [2 * np.random.normal(- h[l]) * np.random.binomial(1, 0.3) + 0.01 * np.random.normal(prices[l]) * np.random.binomial(1, 0.2) for l in range(L)]
-    prodInc = [1000 for l in range(L)]#[prodInc[l] if -prodInc[l]/prices[l] > 0.03 or prodInc[l] > 0 else 0 for l in range(L)]
+    prodInc = [prodInc[l] if -prodInc[l]/prices[l] > 0.03 or prodInc[l] > 0 else 0 for l in range(L)]
     #print(prodInc)
     for k in range(1, G.K):
         #print("Customer %d" % k)
-        i_rate = np.random.exponential(0.05)
-        dropout = np.random.binomial(1, 0.8, S)
-        inconvs.append([100000 for s in range(G.n - S, G.n)])#[i_rate * G.dist[max(k, s), min(k, s)] * dropout[s - G.n + S] for s in range(G.n - S, G.n)])
+        i_rate = 1.9 * np.random.exponential(0.05)
+        #print(i_rate)
+        dropout = np.random.binomial(1, 0.9, S)
+        inconvs.append([i_rate * G.dist[max(k, s), min(k, s)] * dropout[s - G.n + S] for s in range(G.n - S, G.n)])#
         #print(inconvs[-1])
         num_prod = np.random.randint(1, maxl + 1)#!!!!!!!!!!!!!!!!!!!REPLACE BY 1!!!!!!!!!!!!!!!!!!!!!!!!!
         prods = rng.choice(L, size=num_prod, replace=False)
@@ -98,13 +99,37 @@ def get_sol_info1a(G, I_coef, L, maxl, seed=7):
     bnbTree.plotRouteMap()
     spent = 0
     pc_stores_l = 0
+    pc_stores_k = 0
     for l in range(len(items)):
         for s in range(G.S):
             if modelInf[4][s + G.K, l].x > 0.5:
                 spent += (items[l].price - modelInf[4][s + G.K, l].x)
+                #print((items[l].price - modelInf[4][s + G.K, l].x))
                 pc_stores_l += 1
     pc_stores_l = pc_stores_l/len(items)
-    return [bnbTree.profit, bnbTree.rCost, bnbTree.time, bnbTree.gap, bnbTree.numNodes, spent, pc_stores_l]
+    lbreak = False
+    for k in range(1, G.K):
+        for l in Lk[k - 1]:
+            for s in range(G.S):
+                if modelInf[4][s + G.K, l].x > 0.5:
+                    pc_stores_k += 1
+                    lbreak = True
+                    break
+            if lbreak:
+                break
+    pc_stores_k = pc_stores_k/(G.K - 1)
+    pc_k_full = 0
+    for k in range(1, G.K):
+        sl = 0
+        for l in Lk[k - 1]:
+            for s in range(G.S):
+                if modelInf[4][s + G.K, l].x > 0.5:
+                    sl += 1
+                    break
+        if sl == len(Lk[k - 1]):
+            pc_k_full += 1
+    pc_k_full = pc_k_full/(G.K - 1)
+    return [bnbTree.profit, bnbTree.rCost, bnbTree.time, bnbTree.gap, bnbTree.numNodes, spent, pc_stores_l, pc_stores_k, pc_k_full]
 
 if __name__ == "__main__":
     #test over instances

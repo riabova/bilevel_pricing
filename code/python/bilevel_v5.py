@@ -120,6 +120,9 @@ def getModel(G: Graph.Graph, items: list(), Lk: list(), ui, S: int, R: int, q: l
     model.addConstrs(quicksum(v[s + K, l, r] for r in range(R)) == y[s + K, l] for s in range(S) for l in range(len(items)))
     model.addConstrs(quicksum(items[l].w*(v[items[l].k, l, r] + quicksum(v[s + K, l, r] for s in range(S))) for l in range(len(items))) <= q[r] for r in range(R))
 
+    #non-surcharging
+    model.addConstrs(z[s + K, l] <= items[l].price for l in range(len(items)) for s in range(S))
+
     #duality
     model.addConstrs(quicksum(a[l] for l in Lk[k - 1]) == quicksum(items[l].ul*y[items[l].k, l] - w[items[l].k, l] + quicksum(items[l].ul*y[s + K, l] - w[s + K, l] for s in range(S)) for l in Lk[k - 1]) - quicksum(ui[k - 1][s]*p[k, s + K] for s in range(S)) + quicksum(items[l].inc * quicksum(p[k, s + K] for s in range(S)) for l in Lk[k - 1]) for k in range(1, K))
     model.addConstrs(y[0, l] + y[items[l].k, l] + quicksum(y[s + K, l] for s in range(S)) == 1 for l in range(len(items)))     
