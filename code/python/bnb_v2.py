@@ -252,7 +252,7 @@ class BNB:
             folium.Marker(location=self.G.points[i], icon=home, popup=i).add_to(fg1)
         fg1.add_to(m)
         fg2 = folium.FeatureGroup(name="routs", overlay=False, show=False)
-        colors = ["#000000", "#0000ff", "#26580F", "#990000"]
+        colors = ["#000000", "#0000ff", "#028A0F", "#990000"]
         for r in range(self.G.r):
             rgb = colors[r]#(random.randint(0, 255), random.randint(0, 255), random.randint(0, 255))
             for i in range(self.n):
