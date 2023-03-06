@@ -27,34 +27,6 @@ def gen_utils(K: int, P: int, G: Graph.Graph, seed: int):
     utils = np.transpose([np.random.beta(1, 5, K)*base_price[p] + 1.2*base_price[p] for p in range(P)])
     return base_price, price, utils
 
-def get_sol_info(G, I_coef, l):
-    S = G.S #change!
-    q = [G.q]*G.r
-    L = l
-    h = np.random.uniform(0.01*G.q, 0.05*G.q, L)
-    items = []
-    Lk = []
-    bprices, prices, utils = gen_utils(G.n - S - 1, L, G, seed=1)
-    inconvs = [[I_coef * np.mean(prices)**2/G.dist[max(k, s), min(k, s)] for s in range(G.n - S, G.n)] for k in range(1, G.n - S)]
-    k = 0
-    for u_p in utils:
-        k += 1
-        lk = []
-        for l in range(L):
-            if u_p[l] > 0:
-                x = Item(k, l, h[l], u_p[l], bprices[l], prices[l])
-                items.append(x)
-                lk.append(len(items) - 1)
-        Lk.append(lk)
-    #return items, inconvs, Lk
-    modelInf = bilevel_v5.getModel(G, items, Lk, inconvs, S, G.r, q)
-    dThrshd = 2 #change!
-    bnbTree = bnb_v2.BNB(G, modelInf[0], modelInf[1], modelInf[2], modelInf[3], modelInf[4], modelInf[5], items, Lk, inconvs, L, dThrshd)
-    #bnbTree.solve()
-    bnbTree.printSol()
-    bnbTree.store_sol_info()
-    return [bnbTree.profit, bnbTree.rCost, bnbTree.time, bnbTree.gap]
-
 def get_sol_info1a(G, I_coef, L, maxl, seed=7):
     S = G.S #change!
     q = [G.q]*G.r #vehicle capacities
@@ -65,20 +37,24 @@ def get_sol_info1a(G, I_coef, L, maxl, seed=7):
     Lk = []
     c = 0.1
     d = c * G.max_dist
+    #np.random.seed(seed)
     price_lb = np.random.uniform(d/10, 2 * d, L)
     prices = [np.random.uniform(price_lb[i], 1.5 * price_lb[i]) for i in range(L)]
+    #print(prices)
     inconvs = []
     rng = np.random.default_rng(seed=seed)
     prodInc = [2 * np.random.normal(- h[l]) * np.random.binomial(1, 0.3) + 0.01 * np.random.normal(prices[l]) * np.random.binomial(1, 0.2) for l in range(L)]
     prodInc = [prodInc[l] if -prodInc[l]/prices[l] > 0.03 or prodInc[l] > 0 else 0 for l in range(L)]
-    irates = 2.9 * np.random.exponential(0.05, size=G.K-1)
+    #print(prodInc)
     for k in range(1, G.K):
+        #print("Customer %d" % k)
         np.random.seed(seed)
-        #i_rate = 1.9 * np.random.exponential(0.05)
-        #irates.append(i_rate)
+        i_rate = 1.9 * np.random.exponential(0.05)
+        #print(i_rate)
         dropout = np.random.binomial(1, 0.9, S)
         np.random.seed(seed)
-        inconvs.append([irates[k - 1] * G.dist[max(k, s), min(k, s)] * dropout[s - G.n + S] for s in range(G.n - S, G.n)])#
+        inconvs.append([i_rate * G.dist[max(k, s), min(k, s)] * dropout[s - G.n + S] for s in range(G.n - S, G.n)])#
+        #print(inconvs[-1])
         num_prod = np.random.randint(1, maxl + 1)#!!!!!!!!!!!!!!!!!!!REPLACE BY 1!!!!!!!!!!!!!!!!!!!!!!!!!
         prods = rng.choice(L, size=num_prod, replace=False)
         lk = []
@@ -86,17 +62,15 @@ def get_sol_info1a(G, I_coef, L, maxl, seed=7):
             u_p = prices[prod] + 100*np.random.exponential(1) #check units
             items.append(Item(k, prod, h[prod], u_p, price_lb[prod], prices[prod], prodInc[prod]))
             lk.append(len(items) - 1)
+            #print(u_p, prices[prod])
         Lk.append(lk)
-    print(irates)
-    plt.hist(irates)
-    plt.show()
     modelInf = bilevel_v5.getModel(G, items, Lk, inconvs, S, G.r, q, c)
     dThrshd = 2 #change!
     bnbTree = bnb_v2.BNB(G, modelInf[0], modelInf[1], modelInf[2], modelInf[3], modelInf[4], modelInf[5], items, Lk, inconvs, L, dThrshd, I_coef)
     bnbTree.solve()
     bnbTree.printSol()
     bnbTree.store_sol_info()
-    bnbTree.plotRouteMap("new_store")
+    bnbTree.plotRouteMap(expt="circ")
     spent = 0
     pc_stores_l = 0
     pc_stores_k = 0
@@ -140,8 +114,9 @@ if __name__ == "__main__":
     in5= sys.argv[5]
     in6= sys.argv[6]
     in7= sys.argv[7]
-    in8= sys.argv[8]'''
-    s = 3
+    in8= sys.argv[8]
+    s = sys.argv[9]'''
+    #s = 3
     l = 10 #all products
     maxl = 3 #max products in cart
     q = 100
@@ -161,12 +136,12 @@ if __name__ == "__main__":
     f7 = "D:\Study\Ph.D\Projects\Bilevel Optimization\\data\\Buffalo\\sc_routs.txt"
     f8 = "D:\Study\Ph.D\Projects\Bilevel Optimization\\data\\Buffalo\\ss_routs.txt"
     #G.readWithDists(in1, in2, in3, in4, in5, q, r, rf1=in6, rf2=in7, rf3=in8)
-    G.readWithDists(f1, f2, f3, f4, f5, q, r, rf1=f6, rf2=f7, rf3=f8)
-    #G.readSampleWithDists(f1, f2, f3, f4, f5, 11, 3, q, r, rf1=f6, rf2=f7, rf3=f8, tot_custs=tot_custs, tot_stores=tot_stores)
+    #G.readWithDists(f1, f2, f3, f4, f5, q, r, rf1=f6, rf2=f7, rf3=f8)
+    #G.readRandSampleWithDists(f1, f2, f3, f4, f5, 12, 3, q, r, rf1=f6, rf2=f7, rf3=f8, tot_custs=tot_custs, tot_stores=tot_stores)
     #sol_info = get_sol_info1a(G, I_coef, l, maxl)
     #print(sol_info)
     I_coef = 0.3
-    #G.readSampleWOstores(f2, f4, 11, 3, q, r, method="radial", rho=0.02, rf1="D:\Study\Ph.D\Projects\Bilevel Optimization\\data\\Buffalo\\cc_routs.txt")
+    G.readSampleWOstores(f2, f4, 63, 8, q, r, method="radial", rho=0.01, rf1="D:\Study\Ph.D\Projects\Bilevel Optimization\\data\\Buffalo\\cc_routs.txt")
     sol_info = get_sol_info1a(G, I_coef, l, maxl)
     print(sol_info)
     ''''insts = [(51, 10)]#, (63, 12)]#(11, 3), (21, 4), (31, 6), (41, 8), 

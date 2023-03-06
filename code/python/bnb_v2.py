@@ -60,7 +60,7 @@ class BNB:
         self.L = L
         self.distThrshd = distThrshd
         self.I_coef = I_coef
-        self.model.Params.OutputFlag = 0
+        #self.model.Params.OutputFlag = 0
         self.model.setParam('TimeLimit', 36*60*60)
         start = time.time()
         self.model.optimize(bilevel_v5.callback_mult)
@@ -234,7 +234,7 @@ class BNB:
         plt.show()
         #plt.savefig("D:\Study\Ph.D\Projects\Bilevel Optimization\data\\results\img\\routs\\routs_n%d_s%d_r%d.png" % (self.n, self.S, self.G.r))
 
-    def plotRouteMap(self):
+    def plotRouteMap(self, expt=""):
         wh = CustomIcon("D:\Study\Ph.D\Projects\Bilevel Optimization\papers\img\loc_pricing\warehouse.png", icon_size=(50, 25))
         m = folium.Map(location=(42.93, -78.79), zoom_start=11, tiles=None)
         base_map = folium.FeatureGroup(name='Basemap', overlay=True, control=False)
@@ -252,7 +252,7 @@ class BNB:
             folium.Marker(location=self.G.points[i], icon=home, popup=i).add_to(fg1)
         fg1.add_to(m)
         fg2 = folium.FeatureGroup(name="routs", overlay=False, show=False)
-        colors = ["#000000", "#0000ff", "#028A0F", "#990000"]
+        colors = ["#990000", "#101D6B", "#028A0F", "#016064"]#["#000000", "#0000ff", "#028A0F", "#990000"]
         for r in range(self.G.r):
             rgb = colors[r]#(random.randint(0, 255), random.randint(0, 255), random.randint(0, 255))
             for i in range(self.n):
@@ -260,4 +260,4 @@ class BNB:
                     if self.x[i, j, r].x > 0.5:
                         folium.PolyLine(self.G.routs[i, j], color=rgb, weight=3).add_to(fg2)
         fg2.add_to(m)
-        m.save("D:\Study\Ph.D\Projects\Bilevel Optimization\data\\results\img\\routs\\routs_n%d_s%d_r%d_I_%g.html" % (self.n, self.S, self.G.r, self.I_coef))
+        m.save("D:\Study\Ph.D\Projects\Bilevel Optimization\\code\\python\\out\\case\\img\\routs_n%d_s%d_r%d_I_%g" % (self.n, self.S, self.G.r, self.I_coef) + expt + ".html")
