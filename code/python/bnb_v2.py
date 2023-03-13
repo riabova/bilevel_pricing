@@ -199,7 +199,7 @@ class BNB:
                 print("%d, %d: %g %g %g"  % (k, self.items[l].type, self.y[self.items[l].k, l].x, self.items[l].ul, self.items[l].price))
                 print("%d, %d: %g -"  % (0, self.items[l].type, self.y[0, l].x))
                 for s in range(self.S):
-                    print("%d, %d: %g %g %g %g"  % (s + self.K, self.items[l].type, self.y[s + self.K, l].x,  self.items[l].ul, self.ui[k - 1][s], self.z[s + self.K, l].x))
+                    print("%d, %d, %d: %g %g %g %g %g"  % (s + self.K, self.items[l].type, l, self.y[s + self.K, l].x,  self.items[l].ul, self.ui[k - 1][s], self.z[s + self.K, l].x, self.items[l].price))
 
         print("Routing:")
         for i, j, r in self.x.keys():
@@ -258,6 +258,41 @@ class BNB:
             for i in range(self.n):
                 for j in range(i):
                     if self.x[i, j, r].x > 0.5:
-                        folium.PolyLine(self.G.routs[i, j], color=rgb, weight=3).add_to(fg2)
+                        folium.PolyLine(self.G.routs[(i, j)], color=rgb, weight=3).add_to(fg2)
+        fg2.add_to(m)
+        m.save("D:\Study\Ph.D\Projects\Bilevel Optimization\\code\\python\\out\\case\\img\\routs_n%d_s%d_r%d_I_%g" % (self.n, self.S, self.G.r, self.I_coef) + expt + ".html")
+
+    def plotRouteMapSample(self, expt=""):
+        wh = CustomIcon("D:\Study\Ph.D\Projects\Bilevel Optimization\papers\img\loc_pricing\warehouse.png", icon_size=(50, 25))
+        m = folium.Map(location=(42.93, -78.79), zoom_start=11, tiles=None)
+        base_map = folium.FeatureGroup(name='Basemap', overlay=True, control=False)
+        folium.TileLayer(tiles='OpenStreetMap').add_to(base_map)
+        base_map.add_to(m)
+        fg = folium.FeatureGroup(name="stores", overlay=False, show=False)
+        folium.Marker(location=self.G.points[0], icon=wh).add_to(fg)
+        for s in self.G.s_nums:
+            store = CustomIcon("D:\Study\Ph.D\Projects\Bilevel Optimization\papers\img\loc_pricing\store.png", icon_size=(20, 20))
+            folium.Marker(location=self.G.points[self.K + s], icon=store, popup=s).add_to(fg)
+        fg.add_to(m)
+        fg1 = folium.FeatureGroup(name="custs", overlay=False, show=False)
+        for i in self.G.k_nums:
+            home = CustomIcon("D:\Study\Ph.D\Projects\Bilevel Optimization\papers\img\loc_pricing\home.png", icon_size=(20, 20))
+            folium.Marker(location=self.G.points[i], icon=home, popup=i).add_to(fg1)
+        fg1.add_to(m)
+        fg2 = folium.FeatureGroup(name="routs", overlay=False, show=False)
+        colors = ["#990000", "#101D6B", "#028A0F", "#016064"]#["#000000", "#0000ff", "#028A0F", "#990000"]
+        for r in range(self.G.r):
+            rgb = colors[r]#(random.randint(0, 255), random.randint(0, 255), random.randint(0, 255))
+            for i in range(self.K):
+                for j in range(i):
+                    if self.x[i, j, r].x > 0.5:
+                        folium.PolyLine(self.G.routs[self.G.k_nums[i], self.G.k_nums[j]], color=rgb, weight=3).add_to(fg2)
+                for j in range(self.S):
+                    if self.x[i, j + self.K, r].x > 0.5:
+                        folium.PolyLine(self.G.routs[self.G.k_nums[i], self.G.s_nums[j]], color=rgb, weight=3).add_to(fg2)
+            for i in range(self.S):
+                for j in range(self.S):
+                    if self.x[i + self.K, j + self.K, r].x > 0.5:
+                        folium.PolyLine(self.G.routs[self.G.s_nums[i], self.G.s_nums[j]], color=rgb, weight=3).add_to(fg2)
         fg2.add_to(m)
         m.save("D:\Study\Ph.D\Projects\Bilevel Optimization\\code\\python\\out\\case\\img\\routs_n%d_s%d_r%d_I_%g" % (self.n, self.S, self.G.r, self.I_coef) + expt + ".html")

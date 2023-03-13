@@ -168,7 +168,7 @@ class Graph:
                     else:
                         f8.readline()
 
-    def readRandSampleWithDists(self, ssf, ccf, scf, c_coords_file, s_coords_file, K, S, q, r, rf1=None, rf2=None, rf3=None, tot_custs=None, tot_stores=None, seed=7):
+    def readRandSampleWithDists(self, ssf, ccf, scf, c_coords_file, s_coords_file, K, S, q, r, rf1=None, rf2=None, rf3=None, tot_custs=None, tot_stores=None, seed=5):
         f1 = open(ssf, "r")
         f2 = open(ccf, "r")
         f3 = open(scf, "r")
@@ -179,92 +179,126 @@ class Graph:
         self.S = S
         self.n = self.K + self.S
         self.max_dist = 0
+        self.points_tmp = {}
         f1.readline()
         f2.readline()
         np.random.seed(seed)
-        s_nums = np.random.choice(tot_stores, S, replace=False)
-        k_nums = np.random.choice(tot_custs, K, replace=False)
+        #s_tmp = list(range(tot_stores))
+        #k_tmp = list(range(1, tot_custs))
+        self.s_nums = np.random.choice(range(tot_stores), size=S, replace=False)
+        np.random.seed(seed)
+        self.k_nums = np.random.choice(range(1, tot_custs), size=K - 1, replace=False)
+        '''for s in range(S):
+            i = np.random.randint(0, len(s_tmp))
+            self.s_nums.append(s_tmp[i])
+            del s_tmp[i]
+        np.random.seed(seed)
+        for k in range(K - 1):
+            np.random.seed(seed)
+            i = np.random.randint(0, len(k_tmp))
+            self.k_nums.append(k_tmp[i])
+            del k_tmp[i]'''
+        self.s_nums.sort()
+        self.k_nums.sort()
+        self.k_nums = np.insert(self.k_nums, 0, 0)
+        #s_nums = np.random.choice(tot_stores, S, replace=False)
+        #k_nums = np.random.choice(tot_custs, K, replace=False)
         i_new = 0
         for i in range(tot_stores):
             line = f1.readline().split(" ")
-            if i in s_nums:
+            if i in self.s_nums:
                 j_new = 0
                 for j in range(i):
-                    if j in s_nums:
+                    if j in self.s_nums:
                         self.dist[(self.K + i_new, self.K + j_new)] = float(line[j])
                         j_new += 1
                 i_new += 1
         i_new = 0
         for i in range(tot_custs):
             line = f2.readline().split(" ")
-            if i in k_nums:
+            if i in self.k_nums:
                 j_new = 0
                 for j in range(i):
-                    if j in k_nums:
+                    if j in self.k_nums:
                         self.dist[(i_new, j_new)] = float(line[j])
                         self.max_dist = max(self.max_dist, self.dist[(i_new, j_new)])
                         j_new += 1
                 i_new += 1
         i_new = 0
         for i in range(tot_stores):
-            if i in s_nums:
+            if i in self.s_nums:
                 line = f3.readline().split(" ")
                 j_new = 0
                 for j in range(tot_custs):
-                    if j in k_nums:
+                    if j in self.k_nums:
                         self.dist[(self.K + i_new, j_new)] = float(line[j])
                         j_new += 1
                 i_new += 1
         f4 = open(c_coords_file, "r")
         f5 = open(s_coords_file, "r")
+        i_new = 0
         for i in range(tot_custs):
             line = f4.readline().split(", ")
-            if i in k_nums:
+            if i in self.k_nums:
                 self.points.append([float(line[0]), float(line[1])])
+                self.points_tmp[i_new] = [float(line[0]), float(line[1])]
+                i_new += 1
+        i_new = 0
         for i in range(tot_stores):
             line = f5.readline().split(", ")
-            if i in s_nums:
+            if i in self.s_nums:
                 self.points.append([float(line[0]), float(line[1])])
+                self.points_tmp[i_new + self.K] = [float(line[0]), float(line[1])]
+                i_new += 1
         self.routs = {}
         i_new = 0
         if rf1:
             f6 = open(rf1, "r")
             for i in range(tot_custs):
-                if i in k_nums:
+                if i in self.k_nums:
                     j_new = 0
                     for j in range(i):
-                        if j in k_nums:
+                        if j in self.k_nums:
                             self.routs[(i_new, j_new)] = [(float(x[1:].split(", ")[0]), float(x[:-1].split(", ")[1])) for x in f6.readline().split(")[")[1][:-2].split("), ")]
                             j_new += 1
                         else:
                             f6.readline()
                     i_new += 1
+                else:
+                    for j in range(i):
+                        f6.readline()
         i_new = 0
         if rf2:
             f7 = open(rf2, "r")
             for i in range(tot_stores):
-                if i in s_nums:
+                if i in self.s_nums:
                     j_new = 0
                     for j in range(tot_custs):
-                        if j in k_nums:
+                        if j in self.k_nums:
                             self.routs[(self.K + i_new, j_new)] = [(float(x[1:].split(", ")[0]), float(x[:-1].split(", ")[1])) for x in f7.readline().split(")[")[1][:-2].split("), ")]
                             j_new += 1
                         else:
                             f7.readline()
                     i_new += 1
+                else:
+                    for j in range(tot_custs):
+                        f6.readline()
         i_new = 0
         if rf3:
             f8 = open(rf3, "r")
             for i in range(tot_stores):
-                if i in s_nums:
+                if i in self.s_nums:
                     j_new = 0
                     for j in range(i):
-                        if j in s_nums:
+                        if j in self.s_nums:
                             self.routs[(self.K + i_new, self.K + j_new)] = [(float(x[1:].split(", ")[0]), float(x[:-1].split(", ")[1])) for x in f8.readline().split(")[")[1][:-2].split("), ")]
                             j_new += 1
                         else:
                             f8.readline()
                     i_new += 1
+                else:
+                    for j in range(i):
+                        f6.readline()
 
     def readSampleWOstores(self, ccf, c_coords_file, K, S, q, r, method="kmeans", rho=1, rf1=None):
         f1 = open(ccf, "r")

@@ -74,7 +74,6 @@ def get_sol_info1a(G, I_coef, L, maxl, seed=7):
     irates = 2.9 * np.random.exponential(0.05, size=G.K-1)
     for k in range(1, G.K):
         np.random.seed(seed)
-        #i_rate = 1.9 * np.random.exponential(0.05)
         #irates.append(i_rate)
         dropout = np.random.binomial(1, 0.9, S)
         np.random.seed(seed)
@@ -161,8 +160,8 @@ if __name__ == "__main__":
     f7 = "D:\Study\Ph.D\Projects\Bilevel Optimization\\data\\Buffalo\\sc_routs.txt"
     f8 = "D:\Study\Ph.D\Projects\Bilevel Optimization\\data\\Buffalo\\ss_routs.txt"
     #G.readWithDists(in1, in2, in3, in4, in5, q, r, rf1=in6, rf2=in7, rf3=in8)
-    G.readWithDists(f1, f2, f3, f4, f5, q, r, rf1=f6, rf2=f7, rf3=f8)
-    #G.readSampleWithDists(f1, f2, f3, f4, f5, 11, 3, q, r, rf1=f6, rf2=f7, rf3=f8, tot_custs=tot_custs, tot_stores=tot_stores)
+    #G.readWithDists(f1, f2, f3, f4, f5, q, r, rf1=f6, rf2=f7, rf3=f8)
+    G.readRandSampleWithDists(f1, f2, f3, f4, f5, 11, 3, q, r, rf1=f6, rf2=f7, rf3=f8, tot_custs=tot_custs, tot_stores=tot_stores)
     #sol_info = get_sol_info1a(G, I_coef, l, maxl)
     #print(sol_info)
     I_coef = 0.3
