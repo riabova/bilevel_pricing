@@ -174,6 +174,7 @@ class BNB:
         #self.rCost = sum([self.model.getVarByName("C_%g").x % r for r in range(self.G.r)])
         #self.rev = self.model.getVarByName("rev").x
         self.rCost = self.model.getVarByName("rCost").x
+        self.C = [self.model.getVarByName("C_%g" % r) for r in range(self.G.r)]
         self.gap = self.model.MIPGap
         self.discStats = []
         '''for k in range(1, self.K):
@@ -202,6 +203,7 @@ class BNB:
                     print("%d, %d, %d: %g %g %g %g %g"  % (s + self.K, self.items[l].type, l, self.y[s + self.K, l].x,  self.items[l].ul, self.ui[k - 1][s], self.z[s + self.K, l].x, self.items[l].price))
 
         print("Routing:")
+        print([self.model.getVarByName("C_%g" % r).x for r in range(self.G.r)])
         for i, j, r in self.x.keys():
             if self.x[i, j, r].x > 0.5:
                 print("%d, %d, %d" % (i, j, r))

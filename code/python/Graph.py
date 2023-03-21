@@ -3,6 +3,10 @@ import numpy as np
 import RouteBuilder
 from sklearn.cluster import KMeans
 import polyline
+import folium
+from folium.features import CustomIcon
+import matplotlib.pyplot as plt
+from matplotlib.offsetbox import OffsetImage, AnnotationBbox
 
 class Graph:
     points = []
@@ -325,6 +329,7 @@ class Graph:
         stores = self.makeStores(S, method=method, r=rho)
         for s in stores:
             self.points.append(list(s))
+        #self.plotMap()
         #calcuate dists to stores
         rb = RouteBuilder.RouteBuilder()
         for s in range(S):
@@ -350,11 +355,32 @@ class Graph:
         elif method == "radial":
             origin = self.points[0]
             coords = [[pt[0] - origin[0], pt[1] - origin[1]] for pt in self.points[1:]]
-            pcoords = [[r, np.arctan(pt[1]/pt[0])] for pt in coords]
+            pcoords = [[r, np.arctan2(pt[1], pt[0])] for pt in coords]
+            #self.points1 = [[np.round(pt[0] * np.cos(pt[1]) + origin[0], decimals=5), np.round(pt[0] * np.sin(pt[1]) + origin[1], decimals=5)] for pt in pcoords]
+            #self.points2 = [[pt[0] + origin[0], pt[1] + origin[1]] for pt in coords]
             kmeans = KMeans(n_clusters=S)
             kmeans.fit(pcoords)
             stores = kmeans.cluster_centers_
-            return [[np.round(pt[0] * np.cos(pt[1]) + origin[0], decimals=5), np.round(pt[0] * np.sin(pt[1]) + origin[1], decimals=5)] for pt in stores]
+            return [[np.round(r * np.cos(pt[1]) + origin[0], decimals=5), np.round(r * np.sin(pt[1]) + origin[1], decimals=5)] for pt in stores]
+        
+    def plotMap(self):
+        wh = CustomIcon("D:\Study\Ph.D\Projects\Bilevel Optimization\papers\img\loc_pricing\warehouse.png", icon_size=(50, 25))
+        m = folium.Map(location=(42.93, -78.79), zoom_start=11, tiles=None)
+        base_map = folium.FeatureGroup(name='Basemap', overlay=True, control=False)
+        folium.TileLayer(tiles='OpenStreetMap').add_to(base_map)
+        base_map.add_to(m)
+        fg = folium.FeatureGroup(name="stores", overlay=False, show=False)
+        folium.Marker(location=self.points[0], icon=wh).add_to(fg)
+        for s in range(self.S):
+            store = CustomIcon("D:\Study\Ph.D\Projects\Bilevel Optimization\papers\img\loc_pricing\store.png", icon_size=(20, 20))
+            folium.Marker(location=self.points[self.K + s], icon=store, popup=s).add_to(fg)
+        fg.add_to(m)
+        fg1 = folium.FeatureGroup(name="custs", overlay=False, show=False)
+        for i in range(1, self.K):
+            home = CustomIcon("D:\Study\Ph.D\Projects\Bilevel Optimization\papers\img\loc_pricing\home.png", icon_size=(20, 20))
+            folium.Marker(location=self.points1[i - 1], icon=home, popup=i).add_to(fg1)
+        fg1.add_to(m)
+        m.save("D:\Study\Ph.D\Projects\Bilevel Optimization\\code\\python\\out\\case\\img\\map_n%d_s%d.html" % (self.n, self.S))
 
     def get_coords(self):
         return self.points
