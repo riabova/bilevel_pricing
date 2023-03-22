@@ -329,7 +329,7 @@ class Graph:
         stores = self.makeStores(S, method=method, r=rho)
         for s in stores:
             self.points.append(list(s))
-        #self.plotMap()
+        self.plotMap()
         #calcuate dists to stores
         rb = RouteBuilder.RouteBuilder()
         for s in range(S):
@@ -346,6 +346,7 @@ class Graph:
             for i in range(self.K):
                 for j in range(i):
                     self.routs[(i, j)] = [(float(x[1:].split(", ")[0]), float(x[:-1].split(", ")[1])) for x in f3.readline().split(")[")[1][:-2].split("), ")]
+        self.writeStoreFiles(S, method=method, r=rho)
 
     def makeStores(self, S, method="kmeans", r=1):
         if method == "kmeans":
@@ -363,6 +364,30 @@ class Graph:
             stores = kmeans.cluster_centers_
             return [[np.round(r * np.cos(pt[1]) + origin[0], decimals=5), np.round(r * np.sin(pt[1]) + origin[1], decimals=5)] for pt in stores]
         
+    def writeStoreFiles(self, S, method="kmeans", r=1):
+        with open("D:\\Study\\Ph.D\\Projects\\Bilevel Optimization\\data\\Buffalo\\s_coords_" + method + str(r) + ".txt", 'w') as f:
+            for s in range(S):
+                f.write(", ".join([str(x) for x in self.points[self.K + s]]) + "\n")
+        with open("D:\\Study\\Ph.D\\Projects\\Bilevel Optimization\\data\\Buffalo\\ss_routs_" + method + str(r) + ".txt", 'w') as f1:
+            for s in range(S):
+                for j in range(s):
+                    f1.write(str((self.K + s, self.K + j)) + str(self.routs[self.K + s, self.K + j]) + "\n")
+        with open("D:\\Study\\Ph.D\\Projects\\Bilevel Optimization\\data\\Buffalo\\sc_routs_" + method + str(r) + ".txt", 'w') as f1:
+            for s in range(S):
+                for j in range(self.K):
+                    f1.write(str((self.K + s, j)) + str(self.routs[self.K + s, j]) + "\n")
+        with open("D:\\Study\\Ph.D\\Projects\\Bilevel Optimization\\data\\Buffalo\\ss_dists_" + method + str(r) + ".txt", 'w') as f1:
+            f1.write(str(S) + "\n")
+            for s in range(S):
+                for j in range(s):
+                    f1.write(str(self.dist[self.K + s, self.K + j]) + " ")
+                f1.write("\n")
+        with open("D:\\Study\\Ph.D\\Projects\\Bilevel Optimization\\data\\Buffalo\\sc_dists_" + method + str(r) + ".txt", 'w') as f1:
+            for s in range(S):
+                for j in range(self.K):
+                    f1.write(str(self.dist[self.K + s, j]) + " ")
+                f1.write("\n")
+        
     def plotMap(self):
         wh = CustomIcon("D:\Study\Ph.D\Projects\Bilevel Optimization\papers\img\loc_pricing\warehouse.png", icon_size=(50, 25))
         m = folium.Map(location=(42.93, -78.79), zoom_start=11, tiles=None)
@@ -378,7 +403,7 @@ class Graph:
         fg1 = folium.FeatureGroup(name="custs", overlay=False, show=False)
         for i in range(1, self.K):
             home = CustomIcon("D:\Study\Ph.D\Projects\Bilevel Optimization\papers\img\loc_pricing\home.png", icon_size=(20, 20))
-            folium.Marker(location=self.points1[i - 1], icon=home, popup=i).add_to(fg1)
+            folium.Marker(location=self.points[i - 1], icon=home, popup=i).add_to(fg1)
         fg1.add_to(m)
         m.save("D:\Study\Ph.D\Projects\Bilevel Optimization\\code\\python\\out\\case\\img\\map_n%d_s%d.html" % (self.n, self.S))
 
