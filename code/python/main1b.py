@@ -162,14 +162,14 @@ if __name__ == "__main__":
     f8 = "D:\Study\Ph.D\Projects\Bilevel Optimization\\data\\Buffalo\\ss_routs.txt"
     #G.readWithDists(in1, in2, in3, in4, in5, q, r, rf1=in6, rf2=in7, rf3=in8)
     #G.readWithDists(f1, f2, f3, f4, f5, q, r, rf1=f6, rf2=f7, rf3=f8)
-    G.readRandSampleWithDists(f1, f2, f3, f4, f5, 11, 3, q, r, rf1=f6, rf2=f7, rf3=f8, tot_custs=tot_custs, tot_stores=tot_stores)
+    #G.readRandSampleWithDists(f1, f2, f3, f4, f5, 11, 3, q, r, rf1=f6, rf2=f7, rf3=f8, tot_custs=tot_custs, tot_stores=tot_stores)
     #G.readRandSampleWithDists(in1, in2, in3, in4, in5, 63, 3, q, r, rf1=in6, rf2=in7, rf3=in8, tot_custs=tot_custs, tot_stores=tot_stores)
     #sol_info = get_sol_info1a(G, I_coef, l, maxl)
     #print(sol_info)
     I_coef = 11
-    #G.readSampleWOstores(f2, f4, 63, 3, q, r, method="kmeans", rho=1, rf1="D:\Study\Ph.D\Projects\Bilevel Optimization\\data\\Buffalo\\cc_routs.txt")
-    sol_info = get_sol_info1a(G, I_coef, l, maxl, expt="circ")
-    print(sol_info)
+    G.readSampleWOstores(f2, f4, 60, 3, q, r, method="radial", rho=0.5, rf1="D:\Study\Ph.D\Projects\Bilevel Optimization\\data\\Buffalo\\cc_routs.txt")
+    #sol_info = get_sol_info1a(G, I_coef, l, maxl, expt="circ")
+    #print(sol_info)
     ''''insts = [(51, 10)]#, (63, 12)]#(11, 3), (21, 4), (31, 6), (41, 8), 
     rel_path = "\output\statsBuffalo" + "_p30_10_63.csv"# % (100*I_coef)
     with open(script_dir + rel_path, "w", encoding="utf-16") as file:
