@@ -208,7 +208,7 @@ class Graph:
         #s_nums = np.random.choice(tot_stores, S, replace=False)
         #k_nums = np.random.choice(tot_custs, K, replace=False)
         i_new = 0
-        for i in range(tot_stores):
+        for l in range(tot_stores):
             line = f1.readline().split(" ")
             if i in self.s_nums:
                 j_new = 0
@@ -218,7 +218,7 @@ class Graph:
                         j_new += 1
                 i_new += 1
         i_new = 0
-        for i in range(tot_custs):
+        for l in range(tot_custs):
             line = f2.readline().split(" ")
             if i in self.k_nums:
                 j_new = 0
@@ -229,7 +229,7 @@ class Graph:
                         j_new += 1
                 i_new += 1
         i_new = 0
-        for i in range(tot_stores):
+        for l in range(tot_stores):
             if i in self.s_nums:
                 line = f3.readline().split(" ")
                 j_new = 0
