@@ -169,7 +169,7 @@ if __name__ == "__main__":
     #sol_info = get_sol_info1a(G, I_coef, l, maxl)
     #print(sol_info)
     I_coef = 11
-    G.readSampleWOstores(f2, f4, 63, 3, q, r, method="radial", rho=0.02, rf1="D:\Study\Ph.D\Projects\Bilevel Optimization\\data\\Buffalo\\cc_routs.txt")
+    G.readSampleWOstores(f2, f4, 63, 3, q, r, method="radial", rho=0.06, rf1="D:\Study\Ph.D\Projects\Bilevel Optimization\\data\\Buffalo\\cc_routs.txt")
     sol_info = get_sol_info1a(G, I_coef, l, maxl, expt="circ")
     #print(sol_info)
     ''''insts = [(51, 10)]#, (63, 12)]#(11, 3), (21, 4), (31, 6), (41, 8), 
