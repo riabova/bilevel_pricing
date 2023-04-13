@@ -204,6 +204,15 @@ class BNB:
 
         print("Routing:")
         print([self.model.getVarByName("C_%g" % r).x for r in range(self.G.r)])
+        for r in range(self.G.r):
+            items = []
+            for l in range(len(self.items)):
+                if self.model.getVarByName("v_%g_%g_%g" % (self.items[l].k, l, r)).x > 0.5:
+                    items.append([l, self.items[l].k])
+                for s in range(self.S):
+                    if self.model.getVarByName("v_%g_%g_%g" % (s + self.K, l, r)).x > 0.5:
+                        items.append([l, self.items[l].k, s + self.K])
+            print(items)
         for i, j, r in self.x.keys():
             if self.x[i, j, r].x > 0.5:
                 print("%d, %d, %d" % (i, j, r))
