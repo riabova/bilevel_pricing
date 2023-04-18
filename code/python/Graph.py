@@ -286,7 +286,7 @@ class Graph:
                     i_new += 1
                 else:
                     for j in range(tot_custs):
-                        f6.readline()
+                        f7.readline()
         i_new = 0
         if rf3:
             f8 = open(rf3, "r")
@@ -302,7 +302,7 @@ class Graph:
                     i_new += 1
                 else:
                     for j in range(i):
-                        f6.readline()
+                        f8.readline()
 
     def readSampleWOstores(self, ccf, c_coords_file, K, S, q, r, method="kmeans", rho=1, rf1=None):
         f1 = open(ccf, "r")

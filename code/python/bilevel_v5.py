@@ -113,6 +113,7 @@ def getModel(G: Graph.Graph, items: list(), Lk: list(), ui, S: int, R: int, q: l
     model.addConstrs(g[r, 0] >= v[items[l].k, l, r] for l in range(len(items)) for r in range(R))
     model.addConstrs(g[r, 0] >= v[s + K, l, r] for s in range(S) for l in range(len(items)) for r in range(R))
     model.addConstrs(g[r, items[l].k] >= v[items[l].k, l, r] for l in range(len(items)) for r in range(R))
+    model.addConstrs(g[r, k] <= quicksum(v[k, l, r] for l in Lk[k - 1]) for k in range(1, K) for r in range(R))
     model.addConstrs(g[r, s + K] >= v[s + K, l, r] for s in range(S) for l in range(len(items)) for r in range(R))
 
     #capacity
