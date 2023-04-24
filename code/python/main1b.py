@@ -27,35 +27,6 @@ def gen_utils(K: int, P: int, G: Graph.Graph, seed: int):
     utils = np.transpose([np.random.beta(1, 5, K)*base_price[p] + 1.2*base_price[p] for p in range(P)])
     return base_price, price, utils
 
-def get_sol_info(G, I_coef, l):
-    S = G.S #change!
-    q = [G.q]*G.r
-    L = l
-    h = np.random.uniform(0.01*G.q, 0.05*G.q, L)
-    print(h)
-    items = []
-    Lk = []
-    bprices, prices, utils = gen_utils(G.n - S - 1, L, G, seed=1)
-    inconvs = [[I_coef * np.mean(prices)**2/G.dist[max(k, s), min(k, s)] for s in range(G.n - S, G.n)] for k in range(1, G.n - S)]
-    k = 0
-    for u_p in utils:
-        k += 1
-        lk = []
-        for l in range(L):
-            if u_p[l] > 0:
-                x = Item(k, l, h[l], u_p[l], bprices[l], prices[l])
-                items.append(x)
-                lk.append(len(items) - 1)
-        Lk.append(lk)
-    #return items, inconvs, Lk
-    modelInf = bilevel_v5.getModel(G, items, Lk, inconvs, S, G.r, q)
-    dThrshd = 2 #change!
-    bnbTree = bnb_v2.BNB(G, modelInf[0], modelInf[1], modelInf[2], modelInf[3], modelInf[4], modelInf[5], items, Lk, inconvs, L, dThrshd)
-    #bnbTree.solve()
-    bnbTree.printSol()
-    bnbTree.store_sol_info()
-    return [bnbTree.profit, bnbTree.rCost, bnbTree.time, bnbTree.gap]
-
 def get_sol_info1a(G, I_coef, L, maxl, expt="", seed=7):
     S = G.S #change!
     q = [G.q]*G.r #vehicle capacities
