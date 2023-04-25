@@ -172,6 +172,97 @@ class Graph:
                     else:
                         f8.readline()
 
+    def readSampleWithDistsRC(self, ssf, ccf, scf, c_coords_file, s_coords_file, K, S, q, r, rf1=None, rf2=None, rf3=None, tot_custs=None, tot_stores=None, seed=5):
+        f1 = open(ssf, "r")
+        f2 = open(ccf, "r")
+        f3 = open(scf, "r")
+        self.dist = {}
+        self.K = K
+        self.q = q
+        self.r = r
+        self.S = S
+        self.n = self.K + self.S
+        self.max_dist = 0
+        self.points_tmp = {}
+        f1.readline()
+        f2.readline()
+        np.random.seed(seed)
+        self.k_nums = np.random.choice(range(1, tot_custs), size=K - 1, replace=False)
+        self.k_nums.sort()
+        self.k_nums = np.insert(self.k_nums, 0, 0)
+        for i in range(S):
+            line = f1.readline().split(" ")
+            for j in range(i):
+                self.dist[(self.K + i, self.K + j)] = float(line[j])
+        i_new = 0
+        for i in range(tot_custs):
+            line = f2.readline().split(" ")
+            if i in self.k_nums:
+                j_new = 0
+                for j in range(i):
+                    if j in self.k_nums:
+                        self.dist[(i_new, j_new)] = float(line[j])
+                        self.max_dist = max(self.max_dist, self.dist[(i_new, j_new)])
+                        j_new += 1
+                i_new += 1
+        for i in range(S):
+            line = f3.readline().split(" ")
+            j_new = 0
+            for j in range(tot_custs):
+                if j in self.k_nums:
+                    self.dist[(self.K + i, j_new)] = float(line[j])
+                    j_new += 1
+        f4 = open(c_coords_file, "r")
+        f5 = open(s_coords_file, "r")
+        i_new = 0
+        for i in range(tot_custs):
+            line = f4.readline().split(", ")
+            if i in self.k_nums:
+                self.points.append([float(line[0]), float(line[1])])
+                self.points_tmp[i_new] = [float(line[0]), float(line[1])]
+                i_new += 1
+        for i in range(self.S):
+            line = f5.readline().split(", ")
+            self.points.append([float(line[0]), float(line[1])])
+        self.routs = {}
+        i_new = 0
+        if rf1:
+            f6 = open(rf1, "r")
+            for i in range(tot_custs):
+                if i in self.k_nums:
+                    j_new = 0
+                    for j in range(i):
+                        if j in self.k_nums:
+                            self.routs[(i_new, j_new)] = [(float(x[1:].split(", ")[0]), float(x[:-1].split(", ")[1])) for x in f6.readline().split(")[")[1][:-2].split("), ")]
+                            j_new += 1
+                        else:
+                            f6.readline()
+                    i_new += 1
+                else:
+                    for j in range(i):
+                        f6.readline()
+        if rf2:
+            f7 = open(rf2, "r")
+            for i in range(tot_stores):
+                j_new = 0
+                for j in range(tot_custs):
+                    if j in self.k_nums:
+                        self.routs[(self.K + i, j_new)] = [(float(x[1:].split(", ")[0]), float(x[:-1].split(", ")[1])) for x in f7.readline().split(")[")[1][:-2].split("), ")]
+                        j_new += 1
+                    else:
+                        f7.readline()
+                i_new += 1
+        if rf3:
+            f8 = open(rf3, "r")
+            for i in range(tot_stores):
+                for j in range(i):
+                    if i <= self.S:
+                        self.routs[(self.K + i, self.K + j)] = [(float(x[1:].split(", ")[0]), float(x[:-1].split(", ")[1])) for x in f8.readline().split(")[")[1][:-2].split("), ")]
+                    else:
+                        f8.readline()
+        self.plotMap()
+
+
     def readRandSampleWithDists(self, ssf, ccf, scf, c_coords_file, s_coords_file, K, S, q, r, rf1=None, rf2=None, rf3=None, tot_custs=None, tot_stores=None, seed=5):
         f1 = open(ssf, "r")
         f2 = open(ccf, "r")
@@ -202,7 +293,7 @@ class Graph:
             i = np.random.randint(0, len(k_tmp))
             self.k_nums.append(k_tmp[i])
             del k_tmp[i]'''
-        self.s_nums.sort()
+        #self.s_nums.sort()
         self.k_nums.sort()
         self.k_nums = np.insert(self.k_nums, 0, 0)
         #s_nums = np.random.choice(tot_stores, S, replace=False)
@@ -303,6 +394,7 @@ class Graph:
                 else:
                     for j in range(i):
                         f8.readline()
+        self.plotMap()
 
     def readSampleWOstores(self, ccf, c_coords_file, K, S, q, r, method="kmeans", rho=1, rf1=None):
         f1 = open(ccf, "r")

@@ -130,24 +130,24 @@ if __name__ == "__main__":
     tot_stores = 18
     G = Graph.Graph()
     #G.read1("D:\Study\Ph.D\Projects\Bilevel Optimization\data\\tests\A-n10-k1.dat", S=S, seed=1)
-    f1 = "D:\Study\Ph.D\Projects\Bilevel Optimization\\data\\Buffalo\\ss_dists.txt"
+    f1 = "D:\Study\Ph.D\Projects\Bilevel Optimization\\data\\Buffalo\\ss_dists_new.txt"
     f2 = "D:\Study\Ph.D\Projects\Bilevel Optimization\\data\\Buffalo\\cc_dists.txt"
-    f3 = "D:\Study\Ph.D\Projects\Bilevel Optimization\\data\\Buffalo\\sc_dists.txt"
+    f3 = "D:\Study\Ph.D\Projects\Bilevel Optimization\\data\\Buffalo\\sc_dists_new.txt"
     f4 = "D:\Study\Ph.D\Projects\Bilevel Optimization\\data\\Buffalo\\cust_coords.txt"
-    f5 = "D:\Study\Ph.D\Projects\Bilevel Optimization\\data\\Buffalo\\ups_coords.txt"
+    f5 = "D:\Study\Ph.D\Projects\Bilevel Optimization\\data\\Buffalo\\store_coords.txt"
     f6 = "D:\Study\Ph.D\Projects\Bilevel Optimization\\data\\Buffalo\\cc_routs.txt"
-    f7 = "D:\Study\Ph.D\Projects\Bilevel Optimization\\data\\Buffalo\\sc_routs.txt"
-    f8 = "D:\Study\Ph.D\Projects\Bilevel Optimization\\data\\Buffalo\\ss_routs.txt"
+    f7 = "D:\Study\Ph.D\Projects\Bilevel Optimization\\data\\Buffalo\\sc_routs_new.txt"
+    f8 = "D:\Study\Ph.D\Projects\Bilevel Optimization\\data\\Buffalo\\ss_routs_new.txt"
     expt = ""
     #G.readWithDists(in1, in2, in3, in4, in5, q, r, rf1=in6, rf2=in7, rf3=in8)
     #G.readWithDists(f1, f2, f3, f4, f5, q, r, rf1=f6, rf2=f7, rf3=f8)
-    G.readRandSampleWithDists(f1, f2, f3, f4, f5, 41, 1, q, r, rf1=f6, rf2=f7, rf3=f8, tot_custs=tot_custs, tot_stores=tot_stores)
+    G.readSampleWithDistsRC(f1, f2, f3, f4, f5, 41, 3, q, r, rf1=f6, rf2=f7, rf3=f8, tot_custs=tot_custs, tot_stores=5)
     #G.readRandSampleWithDists(in1, in2, in3, in4, in5, K + 1, S, q, r, rf1=in6, rf2=in7, rf3=in8, tot_custs=tot_custs, tot_stores=tot_stores)
     #sol_info = get_sol_info1a(G, I_coef, l, maxl)
     #print(sol_info)
     I_coef = 11
     #G.readSampleWOstores(f2, f4, 41, 1, q, r, method="radial", rho=0.06, rf1="D:\Study\Ph.D\Projects\Bilevel Optimization\\data\\Buffalo\\cc_routs.txt")
-    sol_info = get_sol_info1a(G, I_coef, l, maxl, expt=expt)
+    #sol_info = get_sol_info1a(G, I_coef, l, maxl, expt=expt)
     #print(sol_info)
     ''''insts = [(51, 10)]#, (63, 12)]#(11, 3), (21, 4), (31, 6), (41, 8), 
     rel_path = "\output\statsBuffalo" + "_p30_10_63.csv"# % (100*I_coef)
