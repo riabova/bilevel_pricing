@@ -198,7 +198,6 @@ class BNB:
             sum(self.ui[k - 1][s]*self.p[k, s + self.K].x for s in range(self.S))))
             for l in self.Lk[k - 1]:
                 print("%d, %d: %g %g %g"  % (k, self.items[l].type, self.y[self.items[l].k, l].x, self.items[l].ul, self.items[l].price))
-                print("%d, %d: %g -"  % (0, self.items[l].type, self.y[0, l].x))
                 for s in range(self.S):
                     print("%d, %d, %d: %g %g %g %g %g"  % (s + self.K, self.items[l].type, l, self.y[s + self.K, l].x,  self.items[l].ul, self.ui[k - 1][s], self.z[s + self.K, l].x, self.items[l].price))
 

@@ -260,7 +260,7 @@ class Graph:
                         self.routs[(self.K + i, self.K + j)] = [(float(x[1:].split(", ")[0]), float(x[:-1].split(", ")[1])) for x in f8.readline().split(")[")[1][:-2].split("), ")]
                     else:
                         f8.readline()
-        self.plotMap()
+        #self.plotMap()
 
 
     def readRandSampleWithDists(self, ssf, ccf, scf, c_coords_file, s_coords_file, K, S, q, r, rf1=None, rf2=None, rf3=None, tot_custs=None, tot_stores=None, seed=5):

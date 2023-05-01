@@ -1,7 +1,7 @@
 import bnb_v2
 import Graph
 import bilevel_v5
-import bilevel_v4
+import unimodTest
 import gen_utils
 import time
 import csv
@@ -33,7 +33,6 @@ def get_sol_info1a(G, I_coef, L, maxl, expt="", seed=7):
     w = G.q * G.r/((G.K - 1) * maxl)
     np.random.seed(seed)
     h = np.random.uniform(0.5*w, 2.5 * w, L) #product weights
-    print(h)
     items = []
     Lk = []
     c = 0.1
@@ -57,13 +56,13 @@ def get_sol_info1a(G, I_coef, L, maxl, expt="", seed=7):
         num_prod = np.random.randint(1, maxl + 1)#!!!!!!!!!!!!!!!!!!!REPLACE BY 1!!!!!!!!!!!!!!!!!!!!!!!!!
         ct1[num_prod - 1] += 1
         prods = rng.choice(L, size=num_prod, replace=False)
-        print(prods)
         lk = []
         for prod in prods:
             u_p = prices[prod] + 100*np.random.exponential(1) #check units
             items.append(Item(k, prod, h[prod], u_p, price_lb[prod], prices[prod], prodInc[prod]))
             lk.append(len(items) - 1)
         Lk.append(lk)
+    #test = unimodTest.test(S, inconvs[0], items, Lk[0], [10, 2, 15])
     #print(ct1)
     modelInf = bilevel_v5.getModel(G, items, Lk, inconvs, S, G.r, q, c)
     dThrshd = 2 #change!
@@ -143,7 +142,7 @@ if __name__ == "__main__":
     #G.readWithDists(f1, f2, f3, f4, f5, q, r, rf1=f6, rf2=f7, rf3=f8)
     G.readSampleWithDistsRC(f1, f2, f3, f4, f5, 41, 3, q, r, rf1=f6, rf2=f7, rf3=f8, tot_custs=tot_custs, tot_stores=5)
     #G.readRandSampleWithDists(in1, in2, in3, in4, in5, K + 1, S, q, r, rf1=in6, rf2=in7, rf3=in8, tot_custs=tot_custs, tot_stores=tot_stores)
-    #sol_info = get_sol_info1a(G, I_coef, l, maxl)
+    sol_info = get_sol_info1a(G, I_coef, l, maxl)
     #print(sol_info)
     I_coef = 11
     #G.readSampleWOstores(f2, f4, 41, 1, q, r, method="radial", rho=0.06, rf1="D:\Study\Ph.D\Projects\Bilevel Optimization\\data\\Buffalo\\cc_routs.txt")
