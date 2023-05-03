@@ -147,7 +147,7 @@ if __name__ == "__main__":
     I_coef = 11
     #G.readSampleWOstores(f2, f4, 41, 1, q, r, method="radial", rho=0.06, rf1="D:\Study\Ph.D\Projects\Bilevel Optimization\\data\\Buffalo\\cc_routs.txt")
     #sol_info = get_sol_info1a(G, I_coef, l, maxl, expt=expt)
-    #print(sol_info)
+    print(sol_info)
     ''''insts = [(51, 10)]#, (63, 12)]#(11, 3), (21, 4), (31, 6), (41, 8), 
     rel_path = "\output\statsBuffalo" + "_p30_10_63.csv"# % (100*I_coef)
     with open(script_dir + rel_path, "w", encoding="utf-16") as file:

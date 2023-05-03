@@ -17,11 +17,11 @@ def test(S, ui, items, Lk, disc):
 
     model.addConstrs(y[S, l] + quicksum(y[s, l] for s in range(S)) == 1 for l in Lk)     
     model.addConstrs(y[s, l] <= p[s] for l in Lk for s in range(S))
-    model.addConstrs(p[s] <= quicksum(y[s, l] for l in Lk) for s in range(S))
+    #model.addConstrs(p[s] <= quicksum(y[s, l] for l in Lk) for s in range(S))
 
     model.setObjective(quicksum(items[l].ul*y[S, l] - items[l].price * y[S, l] + quicksum(items[l].ul*y[s, l]
                          - (items[l].price - disc[s]) * y[s, l] for s in range(S)) for l in Lk) - quicksum(ui[s]*p[s] for s in range(S))
-                         + quicksum(items[l].inc * quicksum(p[s] for s in range(S)) for l in Lk), GRB.MAXIMIZE)
+                         + quicksum(items[l].inc * quicksum(y[s, l] for s in range(S)) for l in Lk), GRB.MAXIMIZE)
     
     model.update()
     model.optimize()
