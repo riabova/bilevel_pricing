@@ -27,6 +27,32 @@ def gen_utils(K: int, P: int, G: Graph.Graph, seed: int):
     utils = np.transpose([np.random.beta(1, 5, K)*base_price[p] + 1.2*base_price[p] for p in range(P)])
     return base_price, price, utils
 
+def plot_distrs(G, L, maxl):
+    w = G.q * G.r/((G.K - 1) * maxl)
+    c = 0.1
+    irates = []
+    np.random.seed(7)
+    wts = np.random.uniform(0.5*w, 2.5 * w, L)
+    for seed in range(10):
+        np.random.seed(seed)
+        dropout = [[] for k in range(G.K - 1)]
+        for s in range(G.S):
+            for k in range(G.K - 1):
+                dropout[k].append(max(0.3, np.random.binomial(1, 0.98)))
+        np.random.seed(seed)
+        ct1 = [0, 0, 0]
+        for k in range(1, G.K):
+            i_rate = 15 * np.random.exponential(0.05)
+            irates.append(i_rate)
+    plt.figure(figsize=(14,7)) # Make it 14x7 inch
+    plt.style.use('seaborn-whitegrid') # nice and clean grid
+    plt.hist(wts, bins=5, facecolor = '#2ab0ff', edgecolor='#169acf', linewidth=0.5)
+    plt.xlabel('Weight') 
+    plt.ylabel('Counts') 
+    #plt.show()
+    plt.savefig("weight_distr.svg", format = 'svg', dpi=300)
+
+
 def get_sol_info1a(G, I_coef, L, maxl, expt="", seed=7):
     S = G.S #change!
     q = [G.q]*G.r #vehicle capacities
@@ -36,21 +62,23 @@ def get_sol_info1a(G, I_coef, L, maxl, expt="", seed=7):
     items = []
     Lk = []
     c = 0.1
-    d = c * G.max_dist
+    d = 3400 #c * G.max_dist
     price_lb = np.random.uniform(d/10, 2 * d, L)
     prices = [np.random.uniform(price_lb[i], 1.5 * price_lb[i]) for i in range(L)]
+    print(prices)
     inconvs = []
     rng = np.random.default_rng(seed=seed)
     prodInc = [2 * np.random.normal(- h[l]) * np.random.binomial(1, 0.3) + 0.01 * np.random.normal(prices[l]) * np.random.binomial(1, 0.2) for l in range(L)]
     prodInc = [prodInc[l] if -prodInc[l]/prices[l] > 0.03 or prodInc[l] > 0 else 0 for l in range(L)]
+    print(prodInc)
     dropout = [[] for k in range(G.K - 1)]
     for s in range(S):
         for k in range(G.K - 1):
-            dropout[k].append(np.random.binomial(1, 0.95))
+            dropout[k].append(max(0.3, np.random.binomial(1, 0.98)))
     np.random.seed(seed)
     ct1 = [0, 0, 0]
     for k in range(1, G.K):
-        i_rate = 3 * np.random.exponential(0.05)
+        i_rate = 15 * np.random.exponential(0.05)
         inconvs.append([i_rate * c * G.dist[max(k, s + G.K), min(k, s + G.K)] * dropout[k - 1][s] for s in range(S)])#
         #inconvs.append([100000 * c * G.dist[max(k, s + G.K), min(k, s + G.K)] for s in range(S)])#
         num_prod = np.random.randint(1, maxl + 1)#!!!!!!!!!!!!!!!!!!!REPLACE BY 1!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -64,13 +92,14 @@ def get_sol_info1a(G, I_coef, L, maxl, expt="", seed=7):
         Lk.append(lk)
     #test = unimodTest.test(S, inconvs[0], items, Lk[0], [10, 2, 15])
     #print(ct1)
-    modelInf = bilevel_v5.getModel(G, items, Lk, inconvs, S, G.r, q, c)
+    #print(inconvs)
+    '''modelInf = bilevel_v5.getModel(G, items, Lk, inconvs, S, G.r, q, c)
     dThrshd = 2 #change!
     bnbTree = bnb_v2.BNB(G, modelInf[0], modelInf[1], modelInf[2], modelInf[3], modelInf[4], modelInf[5], items, Lk, inconvs, L, dThrshd, I_coef)
     bnbTree.solve()
     bnbTree.printSol()
     bnbTree.store_sol_info()
-    #bnbTree.plotRouteMap(expt)
+    bnbTree.plotRouteMap(expt)
     spent = 0
     pc_stores_l = 0
     pc_stores_k = 0
@@ -103,7 +132,16 @@ def get_sol_info1a(G, I_coef, L, maxl, expt="", seed=7):
         if sl == len(Lk[k - 1]):
             pc_k_full += 1
     pc_k_full = pc_k_full/(G.K - 1)
-    return [bnbTree.profit, bnbTree.rCost, bnbTree.time, bnbTree.gap, bnbTree.numNodes, spent, pc_stores_l, pc_stores_k, pc_k_full]
+    nkS = [0 for s in range(G.S)]
+    for s in range(G.S):
+        for k in range(1, G.K):
+            ks = 0
+            for l in Lk[k - 1]:
+                if modelInf[4][s + G.K, l].x > 0.5:
+                    ks = 1
+                    break
+            nkS[s] += ks
+    return [bnbTree.profit, bnbTree.UBfin, bnbTree.rCost, bnbTree.time, bnbTree.gap, bnbTree.numNodes, spent, pc_stores_l, pc_stores_k, pc_k_full], nkS'''
 
 if __name__ == "__main__":
     #test over instances
@@ -125,29 +163,30 @@ if __name__ == "__main__":
     r = 4
     script_dir = os.path.dirname(os.path.realpath(__file__))
     I_coef = 11
-    tot_custs = 63
+    tot_custs = 41#63
     tot_stores = 18
     G = Graph.Graph()
     #G.read1("D:\Study\Ph.D\Projects\Bilevel Optimization\data\\tests\A-n10-k1.dat", S=S, seed=1)
     f1 = "D:\Study\Ph.D\Projects\Bilevel Optimization\\data\\Buffalo\\ss_dists_new.txt"
-    f2 = "D:\Study\Ph.D\Projects\Bilevel Optimization\\data\\Buffalo\\cc_dists.txt"
-    f3 = "D:\Study\Ph.D\Projects\Bilevel Optimization\\data\\Buffalo\\sc_dists_new.txt"
-    f4 = "D:\Study\Ph.D\Projects\Bilevel Optimization\\data\\Buffalo\\cust_coords.txt"
+    f2 = "D:\Study\Ph.D\Projects\Bilevel Optimization\\data\\Buffalo\\cc_dists_rand1.txt"
+    f3 = "D:\Study\Ph.D\Projects\Bilevel Optimization\\data\\Buffalo\\sc_dists_rand1.txt"
+    f4 = "D:\Study\Ph.D\Projects\Bilevel Optimization\\data\\Buffalo\\cust_coords_rand1.txt"
     f5 = "D:\Study\Ph.D\Projects\Bilevel Optimization\\data\\Buffalo\\store_coords.txt"
-    f6 = "D:\Study\Ph.D\Projects\Bilevel Optimization\\data\\Buffalo\\cc_routs.txt"
-    f7 = "D:\Study\Ph.D\Projects\Bilevel Optimization\\data\\Buffalo\\sc_routs_new.txt"
+    f6 = "D:\Study\Ph.D\Projects\Bilevel Optimization\\data\\Buffalo\\cc_routs_rand1.txt"
+    f7 = "D:\Study\Ph.D\Projects\Bilevel Optimization\\data\\Buffalo\\sc_routs_rand1.txt"
     f8 = "D:\Study\Ph.D\Projects\Bilevel Optimization\\data\\Buffalo\\ss_routs_new.txt"
     expt = ""
     #G.readWithDists(in1, in2, in3, in4, in5, q, r, rf1=in6, rf2=in7, rf3=in8)
     #G.readWithDists(f1, f2, f3, f4, f5, q, r, rf1=f6, rf2=f7, rf3=f8)
     G.readSampleWithDistsRC(f1, f2, f3, f4, f5, 41, 3, q, r, rf1=f6, rf2=f7, rf3=f8, tot_custs=tot_custs, tot_stores=5)
     #G.readRandSampleWithDists(in1, in2, in3, in4, in5, K + 1, S, q, r, rf1=in6, rf2=in7, rf3=in8, tot_custs=tot_custs, tot_stores=tot_stores)
-    sol_info = get_sol_info1a(G, I_coef, l, maxl)
-    #print(sol_info)
+    plot_distrs(G, l, maxl)
+    sol_info = get_sol_info1a(G, I_coef, l, maxl, expt="rand1")
+    print(sol_info)
     I_coef = 11
     #G.readSampleWOstores(f2, f4, 41, 1, q, r, method="radial", rho=0.06, rf1="D:\Study\Ph.D\Projects\Bilevel Optimization\\data\\Buffalo\\cc_routs.txt")
     #sol_info = get_sol_info1a(G, I_coef, l, maxl, expt=expt)
-    print(sol_info)
+    #print(sol_info)
     ''''insts = [(51, 10)]#, (63, 12)]#(11, 3), (21, 4), (31, 6), (41, 8), 
     rel_path = "\output\statsBuffalo" + "_p30_10_63.csv"# % (100*I_coef)
     with open(script_dir + rel_path, "w", encoding="utf-16") as file:

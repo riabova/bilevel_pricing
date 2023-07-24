@@ -171,6 +171,7 @@ class BNB:
 
     def store_sol_info(self):
         self.profit = -self.model.objVal
+        self.UBfin = -self.model.ObjBound
         #self.rCost = sum([self.model.getVarByName("C_%g").x % r for r in range(self.G.r)])
         #self.rev = self.model.getVarByName("rev").x
         self.rCost = self.model.getVarByName("rCost").x
@@ -193,7 +194,8 @@ class BNB:
         for k in range(1, self.K):
             print("Customer %d - Obj: %g   part1: %g   part2: %g" % (k, sum(self.items[l].ul*self.y[self.items[l].k, l].x - self.w[self.items[l].k, l].x 
             + sum(self.items[l].ul*self.y[s + self.K, l].x - self.w[s + self.K, l].x for s in range(self.S)) for l in self.Lk[k - 1]) 
-            - sum(self.ui[k - 1][s]*self.p[k, s + self.K].x for s in range(self.S)), sum(self.items[l].ul*self.y[self.items[l].k, l].x - self.w[self.items[l].k, l].x 
+            - sum(self.ui[k - 1][s]*self.p[k, s + self.K].x for s in range(self.S))
+            + sum(self.items[l].inc * sum(self.y[s + self.K, l].x for s in range(self.S)) for l in self.Lk[k - 1]), sum(self.items[l].ul*self.y[self.items[l].k, l].x - self.w[self.items[l].k, l].x 
             + sum(self.items[l].ul*self.y[s + self.K, l].x - self.w[s + self.K, l].x for s in range(self.S)) for l in self.Lk[k - 1]), 
             sum(self.ui[k - 1][s]*self.p[k, s + self.K].x for s in range(self.S))))
             for l in self.Lk[k - 1]:
@@ -268,7 +270,7 @@ class BNB:
             for i in range(self.n):
                 for j in range(i):
                     if self.x[i, j, r].x > 0.5:
-                        folium.PolyLine(self.G.routs[(i, j)], color=rgb, weight=3).add_to(fg2)
+                        folium.PolyLine([(x[0] + 0.0007 * r, x[1] + 0.0007 * r) for x in self.G.routs[(i, j)]], color=rgb, weight=3).add_to(fg2)
         fg2.add_to(m)
         m.save("D:\Study\Ph.D\Projects\Bilevel Optimization\\code\\python\\out\\case\\img\\routs_n%d_s%d_r%d_I_%g" % (self.n, self.S, self.G.r, self.I_coef) + expt + ".html")
 

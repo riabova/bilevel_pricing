@@ -201,6 +201,7 @@ class Graph:
                 j_new = 0
                 for j in range(i):
                     if j in self.k_nums:
+                        #print(line[j])
                         self.dist[(i_new, j_new)] = float(line[j])
                         self.max_dist = max(self.max_dist, self.dist[(i_new, j_new)])
                         j_new += 1
