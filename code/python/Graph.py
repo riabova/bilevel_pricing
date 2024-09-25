@@ -2,6 +2,7 @@ import math
 import numpy as np
 import RouteBuilder
 from sklearn.cluster import KMeans
+from scipy.spatial import ConvexHull, convex_hull_plot_2d
 import polyline
 import folium
 from folium.features import CustomIcon
@@ -11,6 +12,15 @@ from matplotlib.offsetbox import OffsetImage, AnnotationBbox
 class Graph:
     points = []
     name = ""
+
+    def calcArea(self):
+        points = np.array(self.points)
+        hull = ConvexHull(points)
+        # plt.plot(points[:,0], points[:,1], 'o')
+        # for simplex in hull.simplices:
+        #     plt.plot(points[simplex, 0], points[simplex, 1], 'k-')
+        # plt.show()
+        self.A = hull.volume
 
     def read(self, file: str, S: int, seed: int):
         f = open(file, "r")

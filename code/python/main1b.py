@@ -1,6 +1,7 @@
 import bnb_v2
 import Graph
 import bilevel_v5
+import bilevel_v5_bin
 import unimodTest
 import gen_utils
 import time
@@ -93,13 +94,13 @@ def get_sol_info1a(G, I_coef, L, maxl, expt="", seed=7):
     #test = unimodTest.test(S, inconvs[0], items, Lk[0], [10, 2, 15])
     #print(ct1)
     #print(inconvs)
-    '''modelInf = bilevel_v5.getModel(G, items, Lk, inconvs, S, G.r, q, c)
+    modelInf = bilevel_v5_bin.getModel(G, items, Lk, inconvs, S, G.r, q, c)
     dThrshd = 2 #change!
-    bnbTree = bnb_v2.BNB(G, modelInf[0], modelInf[1], modelInf[2], modelInf[3], modelInf[4], modelInf[5], items, Lk, inconvs, L, dThrshd, I_coef)
+    bnbTree = bnb_v2.BNB(G, modelInf[0], modelInf[1], modelInf[2], modelInf[3], modelInf[4], modelInf[5], modelInf[6], items, Lk, inconvs, L, dThrshd, I_coef)
     bnbTree.solve()
-    bnbTree.printSol()
+    bnbTree.printSol2()
     bnbTree.store_sol_info()
-    bnbTree.plotRouteMap(expt)
+    # bnbTree.plotRouteMap(expt)
     spent = 0
     pc_stores_l = 0
     pc_stores_k = 0
@@ -141,7 +142,7 @@ def get_sol_info1a(G, I_coef, L, maxl, expt="", seed=7):
                     ks = 1
                     break
             nkS[s] += ks
-    return [bnbTree.profit, bnbTree.UBfin, bnbTree.rCost, bnbTree.time, bnbTree.gap, bnbTree.numNodes, spent, pc_stores_l, pc_stores_k, pc_k_full], nkS'''
+    return [bnbTree.profit, bnbTree.UBfin, bnbTree.rCost, bnbTree.time, bnbTree.gap, bnbTree.numNodes, spent, pc_stores_l, pc_stores_k, pc_k_full], nkS
 
 if __name__ == "__main__":
     #test over instances
@@ -178,7 +179,7 @@ if __name__ == "__main__":
     expt = ""
     #G.readWithDists(in1, in2, in3, in4, in5, q, r, rf1=in6, rf2=in7, rf3=in8)
     #G.readWithDists(f1, f2, f3, f4, f5, q, r, rf1=f6, rf2=f7, rf3=f8)
-    G.readSampleWithDistsRC(f1, f2, f3, f4, f5, 41, 3, q, r, rf1=f6, rf2=f7, rf3=f8, tot_custs=tot_custs, tot_stores=5)
+    G.readSampleWithDistsRC(f1, f2, f3, f4, f5, 16, 3, q, r, rf1=f6, rf2=f7, rf3=f8, tot_custs=tot_custs, tot_stores=5)
     #G.readRandSampleWithDists(in1, in2, in3, in4, in5, K + 1, S, q, r, rf1=in6, rf2=in7, rf3=in8, tot_custs=tot_custs, tot_stores=tot_stores)
     plot_distrs(G, l, maxl)
     sol_info = get_sol_info1a(G, I_coef, l, maxl, expt="rand1")

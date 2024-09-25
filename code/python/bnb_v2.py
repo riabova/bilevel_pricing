@@ -5,6 +5,7 @@ import random
 import numpy as np
 #import bilevel_v4
 import bilevel_v5
+import bilevel_v5_bin
 import folium
 from folium.features import CustomIcon
 import matplotlib.pyplot as plt
@@ -43,7 +44,7 @@ class BNB:
     depth = 0
     UB = 0
 
-    def __init__(self, graph, model, x, y, z, w, p, items, Lk, ui, L, distThrshd, I_coef):
+    def __init__(self, graph, model, x, y, z, w, p, et, items, Lk, ui, L, distThrshd, I_coef):
         self.G = graph
         self.model = model
         self.x = x
@@ -51,6 +52,7 @@ class BNB:
         self.z = z
         self.w = w
         self.p = p
+        self.et = et
         self.n = graph.n
         self.items = items
         self.Lk = Lk
@@ -70,6 +72,7 @@ class BNB:
         root.parent = root
         self.nodeQueue.put(root)
         self.numNodes += 1
+
 
     def findConflictPair(self):
         for k in range(1, self.K):
@@ -195,13 +198,50 @@ class BNB:
             print("Customer %d - Obj: %g   part1: %g   part2: %g" % (k, sum(self.items[l].ul*self.y[self.items[l].k, l].x - self.w[self.items[l].k, l].x 
             + sum(self.items[l].ul*self.y[s + self.K, l].x - self.w[s + self.K, l].x for s in range(self.S)) for l in self.Lk[k - 1]) 
             - sum(self.ui[k - 1][s]*self.p[k, s + self.K].x for s in range(self.S))
-            + sum(self.items[l].inc * sum(self.y[s + self.K, l].x for s in range(self.S)) for l in self.Lk[k - 1]), sum(self.items[l].ul*self.y[self.items[l].k, l].x - self.w[self.items[l].k, l].x 
-            + sum(self.items[l].ul*self.y[s + self.K, l].x - self.w[s + self.K, l].x for s in range(self.S)) for l in self.Lk[k - 1]), 
-            sum(self.ui[k - 1][s]*self.p[k, s + self.K].x for s in range(self.S))))
+            + sum(self.items[l].inc * sum(self.y[s + self.K, l].x for s in range(self.S)) for l in self.Lk[k - 1]), 
+            sum(self.items[l].ul*self.y[self.items[l].k, l].x - self.w[self.items[l].k, l].x + sum(self.items[l].ul*self.y[s + self.K, l].x - self.w[s + self.K, l].x for s in range(self.S)) for l in self.Lk[k - 1]), 
+            sum(self.ui[k - 1][s]*self.p[k, s + self.K].x for s in range(self.S)) - sum(self.items[l].inc * sum(self.y[s + self.K, l].x for s in range(self.S)) for l in self.Lk[k - 1])))
             for l in self.Lk[k - 1]:
                 print("%d, %d: %g %g %g"  % (k, self.items[l].type, self.y[self.items[l].k, l].x, self.items[l].ul, self.items[l].price))
                 for s in range(self.S):
-                    print("%d, %d, %d: %g %g %g %g %g"  % (s + self.K, self.items[l].type, l, self.y[s + self.K, l].x,  self.items[l].ul, self.ui[k - 1][s], self.z[s + self.K, l].x, self.items[l].price))
+                    print("%d, %d, %d: %g %g %g %g %g %d"  % (s + self.K, self.items[l].type, l, self.y[s + self.K, l].x,  self.items[l].ul, self.ui[k - 1][s], self.items[l].inc, self.z[s + self.K, l].x, self.items[l].price - self.ui[self.items[l].k - 1][s] + self.items[l].inc))
+
+        print("Routing:")
+        print([self.model.getVarByName("C_%g" % r).x for r in range(self.G.r)])
+        for r in range(self.G.r):
+            items = []
+            for l in range(len(self.items)):
+                if self.model.getVarByName("v_%g_%g_%g" % (self.items[l].k, l, r)).x > 0.5:
+                    items.append([l, self.items[l].k])
+                for s in range(self.S):
+                    if self.model.getVarByName("v_%g_%g_%g" % (s + self.K, l, r)).x > 0.5:
+                        items.append([l, self.items[l].k, s + self.K])
+            print(items)
+        for i, j, r in self.x.keys():
+            if self.x[i, j, r].x > 0.5:
+                print("%d, %d, %d" % (i, j, r))
+        print("Routing cost: %g" % self.model.getVarByName("rCost").x)#sum([self.model.getVarByName("C_%g").x % r for r in range(self.G.r)]))
+        #print("Revenue: %g" % self.model.getVarByName("rev").x)
+
+    def printSol2(self):
+        print("Leader's objective: %g" % -self.model.objVal)
+        print("Customers decisions:")
+        for k in range(1, self.K):
+            print([self.p[k, s + self.K].x for s in range(self.S)])
+            print("Customer %d - Obj: %g   part1: %g   part2: %g, part3: %g" % (k, sum(self.items[l].ul - self.items[l].price for l in self.Lk[k - 1]) 
+                     - sum(self.ui[k - 1][s] * self.p[k, s + self.K].x for s in range(self.S)) 
+                     + sum(self.items[l].inc * sum(self.y[s + self.K, l].x for s in range(self.S)) for l in self.Lk[k - 1])
+                     + sum(self.ui[k - 1][s] * self.et[k, s + self.K].x * self.p[k, s + self.K].x for s in range(self.S)) 
+                     - sum(self.items[l].inc * sum(self.y[s + self.K, l].x * self.et[k, s + self.K].x for s in range(self.S)) for l in self.Lk[k - 1]), 
+                     sum(self.items[l].ul - self.items[l].price for l in self.Lk[k - 1]), 
+                     - sum(self.ui[k - 1][s] * self.p[k, s + self.K].x for s in range(self.S)) 
+                     + sum(self.items[l].inc * sum(self.y[s + self.K, l].x for s in range(self.S)) for l in self.Lk[k - 1]),
+                     + sum(self.ui[k - 1][s] * self.et[k, s + self.K].x * self.p[k, s + self.K].x for s in range(self.S)) 
+                     - sum(self.items[l].inc * sum(self.y[s + self.K, l].x * self.et[k, s + self.K].x for s in range(self.S)) for l in self.Lk[k - 1])))
+            for l in self.Lk[k - 1]:
+                print("%d, %d: %g %g %g"  % (k, self.items[l].type, self.y[self.items[l].k, l].x, self.items[l].ul, self.items[l].price))
+                for s in range(self.S):
+                    print("%d, %d, %d: %g %g %g %g %g"  % (s + self.K, self.items[l].type, l, self.y[s + self.K, l].x,  self.items[l].ul, self.ui[k - 1][s], self.items[l].inc, self.z[k, s + self.K].x))
 
         print("Routing:")
         print([self.model.getVarByName("C_%g" % r).x for r in range(self.G.r)])
