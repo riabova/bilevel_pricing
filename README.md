@@ -5,6 +5,10 @@ Python implementation of a bilevel optimization model for location-based discoun
 Consider an online retail company offering a set of products and a delivery location choice to their customers. The delivery options include home delivery or delivery to one of the retailer’s pick-up locations,
 which we will further call stores. Since the retailer is interested in some customers choosing particular store locations, they provide individual discounts for the corresponding delivery options. Each customer has a subset of offered products in their cart, and for each product, they choose a delivery option: either home or a store location. After the customers make their delivery choices, the retailer solves a routing problem on the chosen locations (homes and stores) as illustrated below. 
 
+<p align="center">
+<img src="https://github.com/riabova/bilevel_pricing/blob/main/img/game_scheme1a.png" width="400">
+</p>
+
 This decision-making process can be described as a single-leader multi-follower bilevel optimization problem defined over the set of *K* customers, *S* stores, *P* products and *R* vehicles.
 
 | Symbol                                      | Description                                                                        |
