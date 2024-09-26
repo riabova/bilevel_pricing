@@ -41,6 +41,7 @@ Thumbs.db
 !.gitignore
 !code/
 !data/
+!img/
 
 # include code and data
 code/*
