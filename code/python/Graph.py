@@ -123,6 +123,7 @@ class Graph:
                     self.routs[(self.K + i, self.K + j)] = [(float(x[1:].split(", ")[0]), float(x[:-1].split(", ")[1])) for x in f8.readline().split(")[")[1][:-2].split("), ")]
 
     def readSampleWithDists(self, ssf, ccf, scf, c_coords_file, s_coords_file, K, S, q, r, rf1=None, rf2=None, rf3=None, tot_custs=None, tot_stores=None):
+        #takes the first K customers
         f1 = open(ssf, "r")
         f2 = open(ccf, "r")
         f3 = open(scf, "r")
@@ -183,6 +184,7 @@ class Graph:
                         f8.readline()
 
     def readSampleWithDistsRC(self, ssf, ccf, scf, c_coords_file, s_coords_file, K, S, q, r, rf1=None, rf2=None, rf3=None, tot_custs=None, tot_stores=None, seed=5):
+        #takes a sample of K randomly selected customers
         f1 = open(ssf, "r")
         f2 = open(ccf, "r")
         f3 = open(scf, "r")
@@ -275,6 +277,7 @@ class Graph:
 
 
     def readRandSampleWithDists(self, ssf, ccf, scf, c_coords_file, s_coords_file, K, S, q, r, rf1=None, rf2=None, rf3=None, tot_custs=None, tot_stores=None, seed=5):
+        #takes a sample of S stores and K customers at random
         f1 = open(ssf, "r")
         f2 = open(ccf, "r")
         f3 = open(scf, "r")
