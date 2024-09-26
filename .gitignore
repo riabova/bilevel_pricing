@@ -48,3 +48,7 @@ code/*
 !code/python/
 code/python/*/
 data/*/
+!data/Buffalo/
+!data/CVRP_A/
+!data/CVRP_E
+!data/tests/
