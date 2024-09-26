@@ -122,15 +122,15 @@ if __name__ == "__main__":
     tot_custs = 63
     tot_stores = 18
     G = Graph.Graph()
-    #G.read1("D:\Study\Ph.D\Projects\Bilevel Optimization\data\\tests\A-n10-k1.dat", S=S, seed=1)
-    f1 = "D:\Study\Ph.D\Projects\Bilevel Optimization\\data\\Buffalo\\ss_dists.txt"
-    f2 = "D:\Study\Ph.D\Projects\Bilevel Optimization\\data\\Buffalo\\cc_dists.txt"
-    f3 = "D:\Study\Ph.D\Projects\Bilevel Optimization\\data\\Buffalo\\sc_dists.txt"
-    f4 = "D:\Study\Ph.D\Projects\Bilevel Optimization\\data\\Buffalo\\cust_coords.txt"
-    f5 = "D:\Study\Ph.D\Projects\Bilevel Optimization\\data\\Buffalo\\ups_coords.txt"
-    f6 = "D:\Study\Ph.D\Projects\Bilevel Optimization\\data\\Buffalo\\cc_routs.txt"
-    f7 = "D:\Study\Ph.D\Projects\Bilevel Optimization\\data\\Buffalo\\sc_routs.txt"
-    f8 = "D:\Study\Ph.D\Projects\Bilevel Optimization\\data\\Buffalo\\ss_routs.txt"
+    #G.read1("..\..\\data\\tests\A-n10-k1.dat", S=S, seed=1)
+    f1 = "..\..\\data\\Buffalo\\ss_dists.txt"
+    f2 = "..\..\\data\\Buffalo\\cc_dists.txt"
+    f3 = "..\..\\data\\Buffalo\\sc_dists.txt"
+    f4 = "..\..\\data\\Buffalo\\cust_coords.txt"
+    f5 = "..\..\\data\\Buffalo\\ups_coords.txt"
+    f6 = "..\..\\data\\Buffalo\\cc_routs.txt"
+    f7 = "..\..\\data\\Buffalo\\sc_routs.txt"
+    f8 = "..\..\\data\\Buffalo\\ss_routs.txt"
     #G.readWithDists(in1, in2, in3, in4, in5, q, r, rf1=in6, rf2=in7, rf3=in8)
     #G.readWithDists(f1, f2, f3, f4, f5, q, r, rf1=f6, rf2=f7, rf3=f8)
     G.readRandSampleWithDists(f1, f2, f3, f4, f5, 11, 3, q, r, rf1=f6, rf2=f7, rf3=f8, tot_custs=tot_custs, tot_stores=tot_stores)

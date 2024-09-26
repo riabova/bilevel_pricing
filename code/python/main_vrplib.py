@@ -100,12 +100,12 @@ if __name__ == "__main__":
     script_dir = os.path.dirname(os.path.realpath(__file__))
     I_coef = 1000
     G = Graph.Graph()
-    G.read1("D:\Study\Ph.D\Projects\Bilevel Optimization\data\\CVRP_A\A-n39-k6.vrp", S=s, seed=1)
-    '''f1 = "D:\Study\Ph.D\Projects\Bilevel Optimization\data\Buffalo\ss_dists.txt"
-    f2 = "D:\Study\Ph.D\Projects\Bilevel Optimization\data\Buffalo\cc_dists.txt"
-    f3 = "D:\Study\Ph.D\Projects\Bilevel Optimization\data\Buffalo\sc_dists.txt"
-    f4 = "D:\Study\Ph.D\Projects\Bilevel Optimization\data\Buffalo\cust_coords.txt"
-    f5 = "D:\Study\Ph.D\Projects\Bilevel Optimization\data\Buffalo\\ups_coords.txt"
+    G.read1("..\..\\data\\CVRP_A\A-n39-k6.vrp", S=s, seed=1)
+    '''f1 = "..\..\\data\Buffalo\ss_dists.txt"
+    f2 = "..\..\\data\Buffalo\cc_dists.txt"
+    f3 = "..\..\\data\Buffalo\sc_dists.txt"
+    f4 = "..\..\\data\Buffalo\cust_coords.txt"
+    f5 = "..\..\\data\Buffalo\\ups_coords.txt"
     G.readSampleWithDists(f1, f2, f3, f4, f5, 11, 3, q, r)'''
     sol_info = get_sol_info1a(G, I_coef, l, maxl)
     #print(sol_info)
@@ -116,8 +116,8 @@ if __name__ == "__main__":
         f.writerow(["Instance", "Profit", "Routing Cost", "Runtime", "Gap", "Nodes"])
         with open(script_dir + rel_path1, "w", encoding="utf-16") as disc_file:
             f1 = csv.writer(disc_file, lineterminator="\n")
-            for inFile in os.listdir("D:\Study\Ph.D\Projects\Bilevel Optimization\\data\CVRP_A - Copy"):
-                G.read1(os.path.join("D:\Study\Ph.D\Projects\Bilevel Optimization\data\\CVRP_A - Copy", inFile), S=s, seed=1)
+            for inFile in os.listdir("..\..\\data\CVRP_A - Copy"):
+                G.read1(os.path.join("..\..\\data\\CVRP_A - Copy", inFile), S=s, seed=1)
                 sol_info = get_sol_info1a(G, I_coef, l, maxl)
                 f.writerow([inFile] + sol_info[:-1])
                 f1.writerow(sol_info[-1])'''
