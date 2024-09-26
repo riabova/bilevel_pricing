@@ -191,8 +191,10 @@ and constraints (3l) - (3n) present dual feasibility.
 The relaxed packing constraints essentially say that for each conflicting pair of
 locations, either one or both corresponding variables should be zero. Therefore, when we encounter
 a violation of such a constraint, we can create two branches, where we fix one of the two variables
-to be equal to zero and solve the two resulting problems with fixed variables. The Branch-and-Bound procedure pictured below starts by solving the relaxed single-level problem at the
-root node. Then it checks for the packing constraints violation and if a conflict pair of locations is
+to be equal to zero and solve the two resulting problems with fixed variables. The Branch-and-Bound procedure pictured below starts by solving the relaxed single-level problem at the root node. Then it checks for the packing constraints violation and if a conflict pair of locations is
 found, creates two branches, each one of them forces one of the conflicting delivery options to be
 equal to zero.
 
+<p align="center">
+<img src="https://github.com/riabova/bilevel_pricing/blob/main/img/bnb.png" width="600">
+</p>
